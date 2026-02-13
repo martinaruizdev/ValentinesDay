@@ -6,53 +6,25 @@ export default function PixelValentine() {
   const [passcode, setPasscode] = useState('');
   const [currentSection, setCurrentSection] = useState('home');
   const [showError, setShowError] = useState(false);
-/*   const [stars, setStars] = useState([]);
-  const [heartParticles, setHeartParticles] = useState([]); */
-/* 
-  useEffect(() => {
-    const generatedHearts = [...Array(8)].map((_, i) => ({
+
+  const [heartParticles] = useState(() => {
+    return [...Array(8)].map((_, i) => ({
       id: i,
       left: Math.random() * 100,
       duration: 4 + Math.random() * 2,
       delay: i * 0.8
     }));
-    setHeartParticles(generatedHearts);
-  }, []); 
+  });
 
-  // Create twinkling stars
-  useEffect(() => {
-    const newStars = Array.from({ length: 100 }, (_, i) => ({
+  const [stars] = useState(() => {
+    return Array.from({ length: 100 }, (_, i) => ({
       id: i,
       x: Math.random() * 100,
       y: Math.random() * 100,
       size: Math.random() * 2 + 1,
       delay: Math.random() * 3
     }));
-    setStars(newStars);
-  }, []); */
-// 1. Corregido: Solo guardamos los datos, no necesitamos la función set
-const [heartParticles] = useState(() => {
-  return [...Array(8)].map((_, i) => ({
-    id: i,
-    left: Math.random() * 100,
-    duration: 4 + Math.random() * 2,
-    delay: i * 0.8
-  }));
-});
-
-// 2. Corregido: Solo guardamos los datos de las estrellas
-const [stars] = useState(() => {
-  return Array.from({ length: 100 }, (_, i) => ({
-    id: i,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    size: Math.random() * 2 + 1,
-    delay: Math.random() * 3
-  }));
-});
-
-// --- ELIMINA LOS useEffect QUE TENÍAS PARA ESTOS DOS ---
-// (No los necesitas más)
+  });
 
   const checkPasscode = () => {
     const validCodes = ['25/12/25', '251225', '25-12-25'];
@@ -68,11 +40,6 @@ const [stars] = useState(() => {
     <div className="pixel-container">
       {/* Pixel art background */}
       <div className="pixel-background">
-        <div className="sky-gradient"></div>
-        <div className="clouds"></div>
-        <div className="mountains"></div>
-        <div className="trees"></div>
-        <div className="grass"></div>
 
         {/* Twinkling stars */}
         <div className="stars">
@@ -91,7 +58,6 @@ const [stars] = useState(() => {
           ))}
         </div>
 
-        {/* Floating pixel hearts - Versión corregida */}
         <div className="pixel-hearts-float">
           {heartParticles.map((heart) => (
             <div
@@ -130,6 +96,7 @@ const [stars] = useState(() => {
           overflow-x: hidden;
           image-rendering: pixelated;
           font-family: 'Courier New', monospace;
+          width: 100%;
         }
 
         .pixel-background {
@@ -139,93 +106,21 @@ const [stars] = useState(() => {
           width: 100%;
           height: 100%;
           z-index: 0;
+          background-image: url('/fondo2.gif');
+          background-size: cover; 
+          background-position: center; 
+          background-repeat: no-repeat;
         }
 
-        .sky-gradient {
+        .pixel-background::after {
+          content: '';
           position: absolute;
           top: 0;
           left: 0;
           width: 100%;
           height: 100%;
-          background: linear-gradient(
-            to bottom,
-            #1a1832 0%,
-            #2d2256 20%,
-            #4a3b6e 35%,
-            #6b5b95 45%,
-            #ff6b9d 60%,
-            #ff8fa3 70%,
-            #ffa07a 80%,
-            #ffb88c 90%,
-            #87ceeb 100%
-          );
-        }
-
-        .clouds {
-          position: absolute;
-          top: 8%;
-          left: 0;
-          width: 100%;
-          height: 25%;
-          background-image: 
-            radial-gradient(ellipse 200px 60px at 20% 30%, #ff8fa3 0%, transparent 50%),
-            radial-gradient(ellipse 300px 80px at 50% 25%, #ffb88c 0%, transparent 50%),
-            radial-gradient(ellipse 250px 70px at 75% 35%, #ffa07a 0%, transparent 50%),
-            radial-gradient(ellipse 180px 50px at 85% 28%, #ff9b86 0%, transparent 50%);
-          filter: blur(2px);
-          opacity: 0.9;
-        }
-
-        .mountains {
-          position: absolute;
-          bottom: 35%;
-          left: 0;
-          width: 100%;
-          height: 30%;
-          background-image:
-            linear-gradient(to top, transparent 0%, #2d2256 30%),
-            polygon(0% 100%, 15% 40%, 25% 60%, 35% 30%, 50% 50%, 65% 25%, 75% 45%, 85% 35%, 100% 55%, 100% 100%);
-          clip-path: polygon(
-            0% 100%, 
-            8% 75%, 15% 65%, 22% 70%, 30% 55%, 
-            38% 60%, 45% 45%, 52% 50%, 60% 40%, 
-            68% 55%, 75% 50%, 82% 60%, 90% 55%, 
-            100% 65%, 100% 100%
-          );
-          background-color: #2d2256;
-        }
-
-        .trees {
-          position: absolute;
-          bottom: 20%;
-          left: 0;
-          width: 100%;
-          height: 25%;
-          background-image: repeating-linear-gradient(
-            90deg,
-            #1a4d2e 0px,
-            #1a4d2e 8px,
-            transparent 8px,
-            transparent 15px,
-            #1a4d2e 15px,
-            #1a4d2e 22px,
-            transparent 22px,
-            transparent 35px,
-            #1a4d2e 35px,
-            #1a4d2e 40px,
-            transparent 40px,
-            transparent 50px
-          );
-          opacity: 0.8;
-        }
-
-        .grass {
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          width: 100%;
-          height: 20%;
-          background: linear-gradient(to bottom, #4a7c59 0%, #2d5016 100%);
+          background-color: rgba(0, 0, 0, 0.3); 
+          z-index: 1;
         }
 
         .stars {
@@ -291,10 +186,10 @@ function PasscodeScreen({ passcode, setPasscode, checkPasscode, showError }) {
     <div className="passcode-overlay">
       <div className="pixel-window">
         <div className="pixel-title">
-          FOR MY VALENTINE,<br />ALWAYS 💗
+          PARA MI AMOR,<br />SIEMPRE 💗
         </div>
         <div className="pixel-subtitle">
-          OPEN GENTLY. IT'S MEANT FOR YOU.
+          INGRESA LA CONTRASEÑA Y ABRE CON CUIDADO. ES PARA TI.
         </div>
 
         <div className="passcode-box">
@@ -311,13 +206,13 @@ function PasscodeScreen({ passcode, setPasscode, checkPasscode, showError }) {
 
         <button className="pixel-button" onClick={checkPasscode}>
           <Heart className="button-heart" size={20} fill="#fff" />
-          PLAY TOGETHER
+          JUGAR JUNTOS
           <Heart className="button-heart" size={20} fill="#fff" />
         </button>
 
         {showError && (
           <div className="pixel-error">
-            ❌ TRY AGAIN, MY LOVE
+            ❌ INTENTA OTRA VEZ, MI AMOR
           </div>
         )}
       </div>
@@ -536,6 +431,12 @@ function GameWorld({ currentSection, setCurrentSection }) {
             z-index: 10;
             min-height: 100vh;
             padding: 40px 20px;
+            width: 100%;  
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
           }
 
           .pixel-back-btn {
@@ -595,11 +496,10 @@ function HomeMenu({ setCurrentSection, hasSeenMessage, setHasSeenMessage }) {
   const [browserClosing, setBrowserClosing] = useState(false);
 
   const menuItems = [
-    { id: 'music', label: 'SONGS FOR YOU', icon: '🎵', color: '#ff6b9d' },
-    { id: 'map', label: 'OUR DISTANCE', icon: '🗺️', color: '#ffd700' },
-    { id: 'letter', label: 'LOVE LETTER', icon: '💌', color: '#ff8fa3' },
-    { id: 'photos', label: 'OUR MEMORIES', icon: '📸', color: '#87ceeb' },
-    { id: 'barca', label: 'BARÇA VS MADRID', icon: '⚽', color: '#a50044' }
+    { id: 'music', label: 'SORPRESA 1', color: '#ff6b9d' },
+    { id: 'map', label: 'SORPRESA 2', color: '#ffd700' },
+    { id: 'letter', label: 'SORPRESA 3', color: '#ff8fa3' },
+    { id: 'barca', label: 'SORPRESA 4', color: '#a50044' }
   ];
 
   const closeBrowser = () => {
@@ -621,20 +521,20 @@ function HomeMenu({ setCurrentSection, hasSeenMessage, setHasSeenMessage }) {
               <span className="dot yellow"></span>
               <span className="dot green"></span>
             </div>
-            <div className="browser-title">Message.txt</div>
+            <div className="browser-title">Mensaje.txt</div>
           </div>
 
           <div className="browser-content">
             <div className="welcome-message">
-              <p>This is for you.</p>
-              <p>For the person I choose</p>
-              <p>in every version of the day.</p>
-              <p>Near or far,</p>
-              <p>you are where my heart goes first.</p>
+              <p>Esto es para ti.</p>
+              <p>Para la persona que elijo</p>
+              <p>en cada versión del día.</p>
+              <p>Cerca o lejos,</p>
+              <p>eres donde mi corazón va primero.</p>
             </div>
 
             <button className="close-message-btn" onClick={closeBrowser}>
-              Continue ➜
+              Continuar ➜
             </button>
           </div>
         </div>
@@ -643,8 +543,8 @@ function HomeMenu({ setCurrentSection, hasSeenMessage, setHasSeenMessage }) {
       {/* Desktop with Folders */}
       {!showBrowser && (
         <div className="desktop-screen">
-          <div className="desktop-title">Surprise Files</div>
-          <div className="desktop-subtitle">Love unfolds one click at a time 💕</div>
+          <div className="desktop-title">Archivos Sorpresa</div>
+          <div className="desktop-subtitle">El amor se despliega un clic a la vez 💕</div>
 
           <div className="folders-grid">
             {menuItems.map((item, index) => (
@@ -657,8 +557,14 @@ function HomeMenu({ setCurrentSection, hasSeenMessage, setHasSeenMessage }) {
                   animationDelay: `${index * 0.15}s`
                 }}
               >
-                <div className="folder-icon">📁</div>
-                <div className="folder-emoji">{item.icon}</div>
+
+                <div className="folder-icon">
+                  <img
+                    src="/carpeta.png"
+                    alt="Icono de carpeta"
+                    style={{ width: '50px', height: '50px' }}
+                  />
+                </div>
                 <div className="folder-label">{item.label}</div>
               </div>
             ))}
@@ -668,13 +574,16 @@ function HomeMenu({ setCurrentSection, hasSeenMessage, setHasSeenMessage }) {
 
       <style jsx>{`
         .home-menu {
-          position: relative;
-          z-index: 10;
-          min-height: 100vh;
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100vh;
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 40px 20px;
+          z-index: 100;
+          padding: 20px;
         }
 
         .pixel-browser {
@@ -963,16 +872,15 @@ function HomeMenu({ setCurrentSection, hasSeenMessage, setHasSeenMessage }) {
 function MusicSection() {
   const songs = [
     { title: 'Mil Vidas', artist: 'Mora', color: '#ff6b9d' },
-    { title: 'Mi Vida Entera', artist: 'Morat', color: '#ffd700' },
-    { title: 'Valió La Pena', artist: 'Marc Anthony', color: '#ff8fa3' },
-    { title: 'If I Could Fly', artist: 'One Direction', color: '#87ceeb' }
+    { title: 'Mi Vida Entera', artist: 'Morat', color: '#ff7076' },
+    { title: 'Valió La Pena', artist: 'Marc Anthony', color: '#d359da' },
+    { title: 'If I Could Fly', artist: 'One Direction', color: '#322167' }
   ];
 
   return (
     <div className="music-section">
       <div className="section-title">
-        <span className="title-icon">🎵</span>
-        OUR PLAYLIST
+        NUESTRAS CANCIONES
       </div>
 
       <div className="songs-container">
@@ -1006,19 +914,28 @@ function MusicSection() {
         rel="noopener noreferrer"
         className="spotify-button"
       >
-        <span className="spotify-icon">🎧</span>
         ESCUCHAR EN SPOTIFY
-        <span className="spotify-icon">💚</span>
+        <span className="spotify-icon">💗</span>
       </a>
-
       <div className="music-note">
-        These still make me smile 💕
-      </div>
+        Me recuerdan a ti y me hacen sonreir 💕
+      </div> 
 
       <style jsx>{`
         .music-section {
-          max-width: 800px;
-          margin: 80px auto 40px;
+          position: relative; 
+          width: 100%;
+          
+          min-height: 100vh; 
+          
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          z-index: 100;
+
+          padding: 40px 20px; 
+          box-sizing: border-box; 
         }
 
         .section-title {
@@ -1044,6 +961,8 @@ function MusicSection() {
           flex-direction: column;
           gap: 20px;
           margin-bottom: 40px;
+          width: 100%;
+          max-width: 600px; 
         }
 
         .pixel-song-card {
@@ -1053,7 +972,7 @@ function MusicSection() {
           padding: 25px 30px;
           display: flex;
           align-items: center;
-          gap: 25px;
+          gap: 25px;  
           transition: all 0.2s;
           animation: card-slide 0.6s ease-out backwards;
           position: relative;
@@ -1141,8 +1060,8 @@ function MusicSection() {
           align-items: center;
           justify-content: center;
           gap: 15px;
-          background: #1DB954;
-          border: 4px solid #1aa34a;
+          background: #ff6b9d;
+          border: 4px solid #c44569;
           box-shadow: 6px 6px 0 0 rgba(0, 0, 0, 0.3);
           color: white;
           font-size: 20px;
@@ -1218,187 +1137,248 @@ function MusicSection() {
 function MapSection() {
   return (
     <div className="map-section">
-      <div className="section-title">
-        <span className="title-icon">🗺️</span>
-        2,490 KM APART
-      </div>
+      <div className="distance-card">
+        {/* Distancia en KM arriba */}
+        <div className="km-badge">
+          <span className="km-number">2,490</span>
+          <span className="km-label">km</span>
+        </div>
 
-      <div className="map-window">
-        <div className="map-header">Distance Calculator</div>
-        <div className="map-content">
-          <div className="location-marker venezuela">
-            <div className="marker-pin">📍</div>
-            <div className="marker-label">
-              <div className="flag">🇻🇪</div>
-              <div className="city">Valencia</div>
+        {/* Contenedor principal con mapa de fondo */}
+        <div className="map-container">
+          {/* Fondo de mapa satelital/ilustración */}
+          <div className="map-background">
+            {/* Efecto de líneas de mapa */}
+            <svg className="map-lines" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(200,200,200,0.3)" strokeWidth="0.5"/>
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#grid)" />
+              {/* Curva que representa la ruta */}
+              <path 
+                d="M 100,300 Q 300,100 500,200" 
+                fill="none" 
+                stroke="#ff6b9d" 
+                strokeWidth="3" 
+                strokeDasharray="8,8"
+                opacity="0.6"
+              />
+            </svg>
+          </div>
+
+          {/* Fotos de perfil con conexión */}
+          <div className="profiles-connection">
+            {/* Foto izquierda - Venezuela */}
+            <div className="profile-container">
+              <div className="profile-wrapper">
+                <img 
+                  src="https://lh3.googleusercontent.com/d/1yH_NyWxfqQ9BYRc6dCvxS3c_TYlCvWkH" 
+                  alt="Dalel"
+                  className="profile-photo"
+                />
+                <div className="profile-flag">🇻🇪</div>
+              </div>
+              <div className="location-text">
+                <div className="location-name">Dalel</div>
+                <div className="location-place">Valencia, Venezuela</div>
+              </div>
             </div>
-          </div>
 
-          <div className="connection">
-            <div className="distance-display">2,490 KM</div>
-            <div className="dotted-line"></div>
-          </div>
-
-          <div className="location-marker florida">
-            <div className="marker-pin">📍</div>
-            <div className="marker-label">
-              <div className="flag">🇺🇸</div>
-              <div className="city">Clearwater</div>
+            {/* Línea punteada conectora */}
+            <div className="connection-line">
+              <div className="dotted-connector"></div>
+              <Heart className="heart-connector" size={32} fill="#ff6b9d" color="#ff6b9d" />
             </div>
-          </div>
 
-          <div className="heart-center">
-            <Heart size={60} fill="#ff6b9d" color="#ff6b9d" />
-            <div className="heart-text">SOON TOGETHER</div>
+            {/* Foto derecha - Florida */}
+            <div className="profile-container">
+              <div className="profile-wrapper">
+                <img 
+                  src="https://lh3.googleusercontent.com/d/1yk0YE8gj_h7XdCQsJBj5AyJ1gKoKEPYD" 
+                  alt="Carlos"
+                  className="profile-photo"
+                />
+                <div className="profile-flag">🇺🇸</div>
+              </div>
+              <div className="location-text">
+                <div className="location-name">Carlos</div>
+                <div className="location-place">Clearwater, Florida</div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="map-message">
-        But our love knows no borders 💕
+        {/* Mensaje de texto descriptivo */}
+        <div className="distance-message">
+          See the distance between<br />
+          <strong>Dalel</strong> and <strong>Carlos Buccheri</strong>
+        </div>
+
+        {/* Mensaje de amor */}
+        <div className="love-message">
+          Pero nuestro amor no tiene fronteras 💕
+        </div>
       </div>
 
       <style jsx>{`
         .map-section {
-          max-width: 1000px;
-          margin: 80px auto 40px;
+          max-width: 700px;
+          width: 100%;
+          margin: 0 auto;
+          padding: 20px;
         }
 
-        .section-title {
-          font-size: 48px;
-          font-weight: 900;
-          color: white;
-          text-align: center;
-          margin-bottom: 50px;
-          text-shadow: 4px 4px 0px rgba(0, 0, 0, 0.3);
-          letter-spacing: 4px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 20px;
-        }
-
-        .title-icon {
-          font-size: 56px;
-        }
-
-        .map-window {
-          background: white;
-          border: 4px solid #2d2256;
-          box-shadow: 12px 12px 0 0 rgba(0, 0, 0, 0.3);
-        }
-
-        .map-header {
-          background: linear-gradient(to bottom, #87ceeb, #5fa3d0);
-          border-bottom: 4px solid #2d2256;
-          padding: 15px;
-          font-weight: 900;
-          font-size: 18px;
-          color: white;
-          text-align: center;
-          letter-spacing: 2px;
-          text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
-        }
-
-        .map-content {
-          height: 500px;
-          background: linear-gradient(to bottom, #87ceeb 0%, #5fa3d0 50%, #4a7c59 70%, #2d5016 100%);
+        .distance-card {
+          background: linear-gradient(135deg, #f5f3ed 0%, #ede9dd 100%);
+          border-radius: 24px;
+          padding: 40px 30px;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
           position: relative;
-          overflow: hidden;
+          border: 4px solid #2d2256;
         }
 
-        .location-marker {
-          position: absolute;
-          text-align: center;
-          animation: marker-bounce 2s ease-in-out infinite;
-        }
-
-        .location-marker.venezuela {
-          bottom: 40%;
-          left: 20%;
-        }
-
-        .location-marker.florida {
-          top: 25%;
-          right: 20%;
-        }
-
-        @keyframes marker-bounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-15px); }
-        }
-
-        .marker-pin {
-          font-size: 60px;
-          filter: drop-shadow(4px 4px 0 rgba(0, 0, 0, 0.3));
-          margin-bottom: 10px;
-        }
-
-        .marker-label {
-          background: white;
-          border: 3px solid #2d2256;
-          padding: 10px 20px;
-          box-shadow: 4px 4px 0 0 rgba(0, 0, 0, 0.3);
+        .km-badge {
+          background: linear-gradient(135deg, #87a8d0 0%, #6b8fb8 100%);
+          color: white;
+          padding: 12px 32px;
+          border-radius: 50px;
           display: inline-flex;
-          align-items: center;
-          gap: 10px;
-        }
-
-        .flag {
-          font-size: 24px;
-        }
-
-        .city {
+          align-items: baseline;
+          gap: 8px;
+          margin: 0 auto 30px;
+          display: flex;
+          justify-content: center;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+          border: 3px solid rgba(255, 255, 255, 0.4);
+          font-family: 'Courier New', monospace;
           font-weight: 900;
-          color: #2d2256;
-          font-size: 16px;
+        }
+
+        .km-number {
+          font-size: 28px;
+          font-weight: 900;
           letter-spacing: 1px;
         }
 
-        .connection {
+        .km-label {
+          font-size: 18px;
+          font-weight: 700;
+          opacity: 0.95;
+        }
+
+        .map-container {
+          background: white;
+          border-radius: 20px;
+          padding: 40px 30px;
+          position: relative;
+          overflow: hidden;
+          margin-bottom: 25px;
+          border: 3px solid #2d2256;
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .map-background {
           position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          width: 60%;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          opacity: 0.15;
+          z-index: 0;
+        }
+
+        .map-lines {
+          width: 100%;
+          height: 100%;
+        }
+
+        .profiles-connection {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 20px;
+          z-index: 1;
+        }
+
+        .profile-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 15px;
+          flex: 0 0 auto;
+        }
+
+        .profile-wrapper {
+          position: relative;
+        }
+
+        .profile-photo {
+          width: 120px;
+          height: 120px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 5px solid white;
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+          background: #f0f0f0;
+        }
+
+        .profile-flag {
+          position: absolute;
+          bottom: -5px;
+          right: -5px;
+          font-size: 32px;
+          filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
+        }
+
+        .location-text {
           text-align: center;
         }
 
-        .distance-display {
-          background: #ff6b9d;
-          border: 4px solid #c44569;
-          color: white;
-          font-size: 32px;
+        .location-name {
+          font-size: 18px;
           font-weight: 900;
-          padding: 15px 30px;
-          box-shadow: 6px 6px 0 0 rgba(0, 0, 0, 0.3);
-          display: inline-block;
-          margin-bottom: 20px;
-          letter-spacing: 3px;
+          color: #2d2256;
+          margin-bottom: 4px;
+          font-family: 'Courier New', monospace;
         }
 
-        .dotted-line {
-          height: 4px;
+        .location-place {
+          font-size: 13px;
+          color: #666;
+          font-weight: 600;
+        }
+
+        .connection-line {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          margin: 0 -10px;
+        }
+
+        .dotted-connector {
+          position: absolute;
+          width: 100%;
+          height: 3px;
           background-image: repeating-linear-gradient(
             90deg,
             #2d2256 0px,
-            #2d2256 15px,
-            transparent 15px,
-            transparent 30px
+            #2d2256 12px,
+            transparent 12px,
+            transparent 24px
           );
+          opacity: 0.6;
         }
 
-        .heart-center {
-          position: absolute;
-          bottom: 30px;
-          left: 50%;
-          transform: translateX(-50%);
-          text-align: center;
-        }
-
-        .heart-center svg {
-          filter: drop-shadow(4px 4px 0 rgba(0, 0, 0, 0.3));
-          animation: heart-pulse 1.5s ease-in-out infinite;
+        .heart-connector {
+          position: relative;
+          z-index: 2;
+          filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
+          animation: heart-pulse 2s ease-in-out infinite;
         }
 
         @keyframes heart-pulse {
@@ -1406,52 +1386,109 @@ function MapSection() {
           50% { transform: scale(1.15); }
         }
 
-        .heart-text {
-          margin-top: 15px;
-          color: white;
-          font-weight: 900;
+        .distance-message {
+          text-align: center;
           font-size: 18px;
-          letter-spacing: 3px;
-          text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.3);
+          color: #2d2256;
+          line-height: 1.6;
+          font-weight: 500;
+          margin-bottom: 20px;
+          font-family: 'Courier New', monospace;
         }
 
-        .map-message {
-          margin-top: 30px;
+        .distance-message strong {
+          font-weight: 900;
+          color: #ff6b9d;
+        }
+
+        .love-message {
+          background: rgba(255, 107, 157, 0.15);
+          border: 3px solid #ff6b9d;
+          border-radius: 12px;
+          padding: 20px;
           text-align: center;
-          font-size: 24px;
-          color: white;
+          font-size: 20px;
+          color: #2d2256;
+          font-weight: 700;
           font-family: 'Courier New', monospace;
-          background: rgba(255, 107, 157, 0.3);
-          border: 3px solid white;
-          padding: 25px;
-          box-shadow: 6px 6px 0 0 rgba(0, 0, 0, 0.3);
+          box-shadow: 0 4px 10px rgba(255, 107, 157, 0.2);
         }
 
         @media (max-width: 768px) {
-          .section-title {
+          .distance-card {
+            padding: 30px 20px;
+          }
+
+          .km-badge {
+            padding: 10px 24px;
+          }
+
+          .km-number {
+            font-size: 24px;
+          }
+
+          .km-label {
+            font-size: 16px;
+          }
+
+          .map-container {
+            padding: 30px 20px;
+          }
+
+          .profiles-connection {
+            flex-direction: column;
+            gap: 30px;
+          }
+
+          .profile-photo {
+            width: 100px;
+            height: 100px;
+          }
+
+          .profile-flag {
             font-size: 28px;
           }
 
-          .map-content {
-            height: 400px;
+          .connection-line {
+            width: 3px;
+            height: 60px;
+            margin: 0;
           }
 
-          .marker-pin {
-            font-size: 40px;
+          .dotted-connector {
+            width: 3px;
+            height: 100%;
+            background-image: repeating-linear-gradient(
+              180deg,
+              #2d2256 0px,
+              #2d2256 12px,
+              transparent 12px,
+              transparent 24px
+            );
           }
 
-          .distance-display {
-            font-size: 24px;
-            padding: 12px 20px;
+          .distance-message {
+            font-size: 16px;
           }
 
-          .heart-center svg {
-            width: 40px;
-            height: 40px;
+          .love-message {
+            font-size: 18px;
+            padding: 18px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .profile-photo {
+            width: 85px;
+            height: 85px;
           }
 
-          .heart-text {
-            font-size: 14px;
+          .location-name {
+            font-size: 16px;
+          }
+
+          .location-place {
+            font-size: 12px;
           }
         }
       `}</style>
@@ -1463,15 +1500,14 @@ function LetterSection() {
   return (
     <div className="letter-section">
       <div className="section-title">
-        <span className="title-icon">💌</span>
-        FOR YOU, CARLOS
+        PARA TI, CARLOS
       </div>
 
       <div className="pixel-letter">
         <div className="letter-header">
           <div className="stamp">💕</div>
-          <div className="to-label">To: Carlos</div>
-          <div className="from-label">From: Dalel</div>
+          <div className="to-label">Para: Carlos</div>
+          <div className="from-label">De: Dalel</div>
         </div>
 
         <div className="letter-body">
@@ -1493,7 +1529,7 @@ function LetterSection() {
 
           <div className="letter-signature">
             <p>Con todo mi amor,</p>
-            <p className="signature-name">Dalel ❤️</p>
+            <p className="signature-name">Dalel 💗</p>
           </div>
         </div>
       </div>
@@ -1636,184 +1672,6 @@ function LetterSection() {
   );
 }
 
-function PhotosSection() {
-  return (
-    <div className="photos-section">
-      <div className="section-title">
-        <span className="title-icon">📸</span>
-        OUR PHOTO MEMORY
-      </div>
-
-      <div className="photo-frame-window">
-        <div className="window-bar">
-          <div className="cursor-icon">👆</div>
-          Our Memories
-        </div>
-
-        <div className="photos-grid">
-          {[...Array(8)].map((_, i) => (
-            <div key={i} className="photo-slot">
-              <div className="photo-border">
-                <div className="photo-placeholder">
-                  <Heart size={40} fill="#ff6b9d" color="#ff6b9d" />
-                  <div className="photo-text">Memory #{i + 1}</div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="photo-caption">
-          These still make me smile 💕
-        </div>
-      </div>
-
-      <style jsx>{`
-        .photos-section {
-          max-width: 1100px;
-          margin: 80px auto 40px;
-        }
-
-        .section-title {
-          font-size: 48px;
-          font-weight: 900;
-          color: white;
-          text-align: center;
-          margin-bottom: 50px;
-          text-shadow: 4px 4px 0px rgba(0, 0, 0, 0.3);
-          letter-spacing: 4px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 20px;
-        }
-
-        .title-icon {
-          font-size: 56px;
-        }
-
-        .photo-frame-window {
-          background: white;
-          border: 4px solid #2d2256;
-          box-shadow: 12px 12px 0 0 rgba(0, 0, 0, 0.3);
-        }
-
-        .window-bar {
-          background: linear-gradient(to bottom, #ffd700, #ffb700);
-          border-bottom: 4px solid #2d2256;
-          padding: 15px;
-          font-weight: 900;
-          font-size: 18px;
-          color: #2d2256;
-          text-align: center;
-          letter-spacing: 2px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 15px;
-        }
-
-        .cursor-icon {
-          font-size: 24px;
-          animation: point 1s ease-in-out infinite;
-        }
-
-        @keyframes point {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-5px); }
-        }
-
-        .photos-grid {
-          padding: 40px;
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 25px;
-          background: #e8b4d9;
-        }
-
-        .photo-slot {
-          animation: photo-appear 0.6s ease-out backwards;
-        }
-
-        .photo-slot:nth-child(1) { animation-delay: 0.1s; }
-        .photo-slot:nth-child(2) { animation-delay: 0.2s; }
-        .photo-slot:nth-child(3) { animation-delay: 0.3s; }
-        .photo-slot:nth-child(4) { animation-delay: 0.4s; }
-        .photo-slot:nth-child(5) { animation-delay: 0.5s; }
-        .photo-slot:nth-child(6) { animation-delay: 0.6s; }
-        .photo-slot:nth-child(7) { animation-delay: 0.7s; }
-        .photo-slot:nth-child(8) { animation-delay: 0.8s; }
-
-        @keyframes photo-appear {
-          from {
-            opacity: 0;
-            transform: scale(0.8) rotate(-5deg);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1) rotate(0deg);
-          }
-        }
-
-        .photo-border {
-          background: white;
-          border: 4px solid #2d2256;
-          padding: 12px;
-          box-shadow: 4px 4px 0 0 rgba(0, 0, 0, 0.3);
-          transition: all 0.2s;
-        }
-
-        .photo-border:hover {
-          transform: rotate(3deg) scale(1.05);
-          box-shadow: 6px 6px 0 0 rgba(0, 0, 0, 0.3);
-        }
-
-        .photo-placeholder {
-          aspect-ratio: 1;
-          background: linear-gradient(135deg, #ff8fa3, #ffc1cc);
-          border: 2px solid #2d2256;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-        }
-
-        .photo-text {
-          font-size: 14px;
-          font-weight: 900;
-          color: #2d2256;
-          letter-spacing: 1px;
-        }
-
-        .photo-caption {
-          background: #ff6b9d;
-          border-top: 4px solid #2d2256;
-          padding: 20px;
-          text-align: center;
-          font-size: 20px;
-          font-weight: 900;
-          color: white;
-          letter-spacing: 2px;
-          text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
-        }
-
-        @media (max-width: 768px) {
-          .section-title {
-            font-size: 32px;
-          }
-
-          .photos-grid {
-            grid-template-columns: repeat(2, 1fr);
-            padding: 20px;
-            gap: 15px;
-          }
-        }
-      `}</style>
-    </div>
-  );
-}
-
 function BarcaSection() {
   const [currentPhrase, setCurrentPhrase] = useState(0);
 
@@ -1831,7 +1689,6 @@ function BarcaSection() {
   return (
     <div className="barca-section">
       <div className="section-title">
-        <span className="title-icon">⚽</span>
         NUESTRO PARTIDO
       </div>
 
@@ -1847,9 +1704,9 @@ function BarcaSection() {
             <div className="field-lines"></div>
             <div className="ball">⚽</div>
             <div className="hearts-field">
-              <span>💙</span>
-              <span>❤️</span>
-              <span>💙</span>
+              <span>💗</span>
+              <span>💗</span>
+              <span>💗</span>
             </div>
           </div>
         </div>
