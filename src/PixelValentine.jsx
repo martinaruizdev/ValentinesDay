@@ -686,7 +686,7 @@ function HomeMenu({ setCurrentSection, hasSeenMessage, setHasSeenMessage, comple
       color: '#d946ef',
       challenge: {
         type: 'wordsearch',
-        question: 'Encuentra todos los apodos que te tengo en la sopa de letras:',
+        question: 'Encuentra todos los apodos en la sopa de letras:',
         words: ['CACHETONA', 'AMOR', 'MIVIDA', 'MAMI']
       }
     }
@@ -2742,40 +2742,83 @@ function ChallengeModal({ surprise, onClose, onSuccess }) {
   };
 
   const handleMouseDown = (row, col) => {
-    setIsSelecting(true);
-    setSelectedCells([[row, col]]);
-  };
-
-  const handleMouseEnter = (row, col) => {
-    if (isSelecting) {
+    // Sistema de click individual - agregar o quitar celda
+    const cellIndex = selectedCells.findIndex(([r, c]) => r === row && c === col);
+    
+    if (cellIndex !== -1) {
+      // Si la celda ya está seleccionada, quitarla
+      setSelectedCells(prev => prev.filter((_, i) => i !== cellIndex));
+    } else {
+      // Si no está seleccionada, agregarla
       setSelectedCells(prev => [...prev, [row, col]]);
     }
   };
 
+  const handleMouseEnter = (row, col) => {
+    // Ya no usamos esto para el sistema de click individual
+    return;
+  };
+
   const handleMouseUp = () => {
-    setIsSelecting(false);
-    checkWordSearch();
-    setSelectedCells([]);
+    // Ya no usamos esto para el sistema de click individual
+    return;
   };
 
   const checkWordSearch = () => {
-    const selectedWord = selectedCells.map(([r, c]) => grid[r][c]).join('');
-    const reversedWord = selectedWord.split('').reverse().join('');
+    if (selectedCells.length === 0) return;
+    
+    // Crear un conjunto de las posiciones seleccionadas para comparar fácilmente
+    const selectedPositionsSet = new Set(
+      selectedCells.map(([r, c]) => `${r},${c}`)
+    );
+    
+    console.log('Posiciones seleccionadas:', selectedCells);
+    console.log('Palabras a buscar:', surprise.challenge.words);
+    
+    let wordFound = false;
     
     if (surprise.challenge.words) {
       surprise.challenge.words.forEach(word => {
-        if ((selectedWord === word || reversedWord === word) && !foundWords.includes(word)) {
-          const newFoundWords = [...foundWords, word];
-          setFoundWords(newFoundWords);
+        const positions = wordPositions[word];
+        
+        if (!positions || foundWords.includes(word)) return;
+        
+        // Verificar si las posiciones seleccionadas coinciden exactamente con las de la palabra
+        if (positions.length === selectedCells.length) {
+          const wordPositionsSet = new Set(
+            positions.map(([r, c]) => `${r},${c}`)
+          );
           
-          if (newFoundWords.length === surprise.challenge.words.length) {
-            setShowSuccess(true);
-            setTimeout(() => {
-              onSuccess();
-            }, 1500);
+          // Verificar si todos los elementos son iguales (sin importar orden)
+          const areEqual = 
+            selectedCells.length === positions.length &&
+            selectedCells.every(([r, c]) => wordPositionsSet.has(`${r},${c}`));
+          
+          if (areEqual) {
+            console.log('¡Palabra encontrada!:', word);
+            const newFoundWords = [...foundWords, word];
+            setFoundWords(newFoundWords);
+            setSelectedCells([]); // Limpiar solo si encontró la palabra
+            wordFound = true;
+            
+            if (newFoundWords.length === surprise.challenge.words.length) {
+              setShowSuccess(true);
+              setTimeout(() => {
+                onSuccess();
+              }, 1500);
+            }
           }
         }
       });
+      
+      // Si no encontró la palabra, mostrar error
+      if (!wordFound) {
+        console.log('Palabra no encontrada');
+        const selectedWord = selectedCells.map(([r, c]) => grid[r][c]).join('');
+        console.log('Letras formadas:', selectedWord);
+        setShowError(true);
+        setTimeout(() => setShowError(false), 1000);
+      }
     }
   };
 
@@ -2828,14 +2871,38 @@ function ChallengeModal({ surprise, onClose, onSuccess }) {
                     <div
                       key={`${rowIndex}-${colIndex}`}
                       className={`grid-cell-modal ${isCellSelected(rowIndex, colIndex) ? 'selected' : ''} ${isCellFound(rowIndex, colIndex) ? 'found' : ''}`}
-                      onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
-                      onMouseEnter={() => handleMouseEnter(rowIndex, colIndex)}
+                      onClick={() => handleMouseDown(rowIndex, colIndex)}
                     >
                       {letter}
                     </div>
                   ))}
                 </div>
               ))}
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+              <button 
+                className="submit-challenge-btn"
+                onClick={() => {
+                  playClick();
+                  checkWordSearch();
+                }}
+                disabled={selectedCells.length === 0}
+                style={{ flex: 1 }}
+              >
+                ✓ VERIFICAR PALABRA
+              </button>
+              <button 
+                className="submit-challenge-btn"
+                onClick={() => {
+                  playClick();
+                  setSelectedCells([]);
+                }}
+                disabled={selectedCells.length === 0}
+                style={{ flex: 1, background: 'linear-gradient(180deg, #95a5a6 0%, #7f8c8d 100%)', borderColor: '#7f8c8d' }}
+              >
+                ✕ LIMPIAR
+              </button>
             </div>
           </div>
         ) : surprise.challenge.type === 'question' ? (
@@ -2900,6 +2967,7 @@ function ChallengeModal({ surprise, onClose, onSuccess }) {
             z-index: 10000;
             padding: 20px;
             animation: overlay-fade-in 0.3s ease-out;
+            overflow-y: auto;
           }
 
           @keyframes overlay-fade-in {
@@ -2916,6 +2984,7 @@ function ChallengeModal({ surprise, onClose, onSuccess }) {
             width: 100%;
             position: relative;
             animation: modal-pop-in 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            margin: auto;
           }
 
           @keyframes modal-pop-in {
