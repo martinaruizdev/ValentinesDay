@@ -2899,7 +2899,7 @@ function ChallengeModal({ surprise, onClose, onSuccess }) {
                   setSelectedCells([]);
                 }}
                 disabled={selectedCells.length === 0}
-                style={{ flex: 1, background: 'linear-gradient(180deg, #95a5a6 0%, #7f8c8d 100%)', borderColor: '#7f8c8d' }}
+                style={{ flex: 1, background: '#95a5a6', borderColor: '#7f8c8d' }}
               >
                 ✕ LIMPIAR
               </button>
