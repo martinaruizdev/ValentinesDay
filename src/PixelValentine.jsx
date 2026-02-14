@@ -838,7 +838,7 @@ function HomeMenu({ setCurrentSection, hasSeenMessage, setHasSeenMessage, comple
 
         .desktop-subtitle {
           text-align: center;
-          font-size: 20px;
+          font-size: 22px;
           color: white;
           margin-bottom: 50px;
           font-family: 'Courier New', monospace;
@@ -999,10 +999,10 @@ function HomeMenu({ setCurrentSection, hasSeenMessage, setHasSeenMessage, comple
 
 function MusicSection() {
   const songs = [
-    { title: 'Mil Vidas', artist: 'Mora', color: '#ff6b9d' },
-    { title: 'Mi Vida Entera', artist: 'Morat', color: '#ff7076' },
-    { title: 'Valió La Pena', artist: 'Marc Anthony', color: '#d359da' },
-    { title: 'If I Could Fly', artist: 'One Direction', color: '#322167' }
+    { title: 'Mil Vidas', artist: 'Mora', color: '#ff6b9d', link: 'https://youtu.be/RTu9GDfGwks?si=y5-Asn7el500Z5id' },
+    { title: 'Mi Vida Entera', artist: 'Morat', color: '#ff7076', link: 'https://youtu.be/ooCnP_s0K6s?si=I_F2L-R7Gkdng6rT'  },
+    { title: 'Valió La Pena', artist: 'Marc Anthony', color: '#d359da', link: 'https://youtu.be/ogxwJFsRhNM?si=RgA-BeLEOWdmMQoo'  },
+    { title: 'If I Could Fly', artist: 'One Direction', color: '#322167',link: 'https://youtu.be/L47mRyhxsBw?si=iawUkeJ0bOLlrQvy'  }
   ];
 
   return (
@@ -1013,12 +1013,18 @@ function MusicSection() {
 
       <div className="songs-container">
         {songs.map((song, index) => (
-          <div
+          <a
+href={song.link}
+            target="_blank"
+            rel="noopener noreferrer"
             key={index}
             className="pixel-song-card"
             style={{
               '--song-color': song.color,
-              animationDelay: `${index * 0.15}s`
+              animationDelay: `${index * 0.15}s`,
+              textDecoration: 'none', // Quita el subrayado
+              color: 'inherit',       // Mantiene el color original
+              display: 'flex'         // Mantiene el diseño flexbox
             }}
           >
             <div className="song-number">#{index + 1}</div>
@@ -1032,7 +1038,7 @@ function MusicSection() {
               <div className="bar"></div>
               <div className="bar"></div>
             </div>
-          </div>
+          </a>
         ))}
       </div>
 
@@ -1280,6 +1286,11 @@ function MapSection() {
         <div className="map-container">
           {/* Fondo de mapa satelital/ilustración */}
           <div className="map-background">
+            <img 
+  src="/tu-imagen-mapa.jpg" 
+  alt="Mapa"
+  className="map-image"
+/>
             {/* Efecto de líneas de mapa */}
             <svg className="map-lines" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
               <defs>
@@ -1642,6 +1653,8 @@ function MapSection() {
     </div>
   );
 }
+
+
 
 function LetterSection() {
   return (
