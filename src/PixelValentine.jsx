@@ -6,6 +6,7 @@ export default function PixelValentine() {
   const [passcode, setPasscode] = useState('');
   const [currentSection, setCurrentSection] = useState('home');
   const [showError, setShowError] = useState(false);
+  const [completedLevels, setCompletedLevels] = useState([]);
 
   const [heartParticles] = useState(() => {
     return [...Array(8)].map((_, i) => ({
@@ -86,6 +87,8 @@ export default function PixelValentine() {
         <GameWorld
           currentSection={currentSection}
           setCurrentSection={setCurrentSection}
+          completedLevels={completedLevels}
+          setCompletedLevels={setCompletedLevels}
         />
       )}
 
@@ -399,7 +402,7 @@ function PasscodeScreen({ passcode, setPasscode, checkPasscode, showError }) {
   );
 }
 
-function GameWorld({ currentSection, setCurrentSection }) {
+function GameWorld({ currentSection, setCurrentSection, completedLevels, setCompletedLevels }) {
   const [hasSeenMessage, setHasSeenMessage] = useState(false);
 
   if (currentSection === 'home') {
@@ -408,6 +411,8 @@ function GameWorld({ currentSection, setCurrentSection }) {
         setCurrentSection={setCurrentSection}
         hasSeenMessage={hasSeenMessage}
         setHasSeenMessage={setHasSeenMessage}
+        completedLevels={completedLevels}
+        setCompletedLevels={setCompletedLevels}
       />
     );
   }
@@ -491,16 +496,78 @@ function GameWorld({ currentSection, setCurrentSection }) {
   );
 }
 
-function HomeMenu({ setCurrentSection, hasSeenMessage, setHasSeenMessage }) {
+function HomeMenu({ setCurrentSection, hasSeenMessage, setHasSeenMessage, completedLevels, setCompletedLevels }) {
   const [showBrowser, setShowBrowser] = useState(!hasSeenMessage);
   const [browserClosing, setBrowserClosing] = useState(false);
+  const [activeSurprise, setActiveSurprise] = useState(null);
 
   const menuItems = [
-    { id: 'music', label: 'SORPRESA 1', color: '#ff6b9d' },
-    { id: 'map', label: 'SORPRESA 2', color: '#ffd700' },
-    { id: 'letter', label: 'SORPRESA 3', color: '#ff8fa3' },
-    { id: 'barca', label: 'SORPRESA 4', color: '#a50044' }
+    { 
+      id: 'music', 
+      label: 'SORPRESA 1', 
+      color: '#ff6b9d',
+      challenge: {
+        type: 'question',
+        question: '¿Cuál es nuestra canción especial?',
+        options: ['Mil Vidas', 'Un Verano Sin Ti', 'Me Rehúso', 'La Pregunta'],
+        correctAnswer: 'Mil Vidas'
+      }
+    },
+    { 
+      id: 'map', 
+      label: 'SORPRESA 2', 
+      color: '#fd7e84ff',
+      challenge: {
+        type: 'puzzle',
+        question: '¿Cuántos kilómetros nos separan?',
+        answer: '2490'
+      }
+    },
+    { 
+      id: 'letter', 
+      label: 'SORPRESA 3', 
+      color: '#ff8fa3',
+      challenge: {
+        type: 'question',
+        question: '¿Qué es lo más importante en nuestro amor?',
+        options: ['La distancia', 'Los recuerdos', 'Nuestro corazón', 'El tiempo'],
+        correctAnswer: 'Nuestro corazón'
+      }
+    },
+    { 
+      id: 'barca', 
+      label: 'SORPRESA 4', 
+      color: '#a50044',
+      challenge: {
+        type: 'puzzle',
+        question: 'Completa: "Eres mi lugar ______"',
+        answer: 'favorito'
+      }
+    }
   ];
+
+  const isSurpriseUnlocked = (index) => {
+    if (index === 0) return true;
+    return completedLevels.includes(menuItems[index - 1].id);
+  };
+
+  const handleFolderClick = (item, index) => {
+    if (!isSurpriseUnlocked(index)) return;
+    
+    if (completedLevels.includes(item.id)) {
+      setCurrentSection(item.id);
+    } else {
+      setActiveSurprise(item);
+    }
+  };
+
+  const handleChallengeSuccess = (itemId) => {
+    if (!completedLevels.includes(itemId)) {
+      setCompletedLevels([...completedLevels, itemId]);
+    }
+    setActiveSurprise(null);
+    setCurrentSection(itemId);
+  };
 
   const closeBrowser = () => {
     setBrowserClosing(true);
@@ -544,32 +611,57 @@ function HomeMenu({ setCurrentSection, hasSeenMessage, setHasSeenMessage }) {
       {!showBrowser && (
         <div className="desktop-screen">
           <div className="desktop-title">Archivos Sorpresa</div>
-          <div className="desktop-subtitle">El amor se despliega un clic a la vez 💕</div>
+          <div className="desktop-subtitle">El amor se despliega un click a la vez 💕</div>
 
           <div className="folders-grid">
-            {menuItems.map((item, index) => (
-              <div
-                key={item.id}
-                className="pixel-folder"
-                onClick={() => setCurrentSection(item.id)}
-                style={{
-                  '--folder-color': item.color,
-                  animationDelay: `${index * 0.15}s`
-                }}
-              >
-
-                <div className="folder-icon">
-                  <img
-                    src="/carpeta.png"
-                    alt="Icono de carpeta"
-                    style={{ width: '50px', height: '50px' }}
-                  />
+            {menuItems.map((item, index) => {
+              const isUnlocked = isSurpriseUnlocked(index);
+              const isCompleted = completedLevels.includes(item.id);
+              
+              return (
+                <div
+                  key={item.id}
+                  className={`pixel-folder ${!isUnlocked ? 'locked' : ''} ${isCompleted ? 'completed' : ''}`}
+                  onClick={() => handleFolderClick(item, index)}
+                  style={{
+                    '--folder-color': item.color,
+                    animationDelay: `${index * 0.15}s`,
+                    cursor: isUnlocked ? 'pointer' : 'not-allowed'
+                  }}
+                >
+                  <div className="folder-icon">
+                    {!isUnlocked ? (
+                      <div style={{ fontSize: '50px' }}>🔒</div>
+                    ) : (
+                      <img
+                        src="/carpeta.png"
+                        alt="Icono de carpeta"
+                        style={{ width: '50px', height: '50px' }}
+                      />
+                    )}
+                  </div>
+                  <div className="folder-label">
+                    {isUnlocked ? item.label : `NIVEL ${index + 1} BLOQUEADO`}
+                  </div>
+                  {isCompleted && (
+                    <div className="completed-badge">✓ COMPLETADO</div>
+                  )}
+                  {!isUnlocked && (
+                    <div className="unlock-hint">Completa el nivel anterior</div>
+                  )}
                 </div>
-                <div className="folder-label">{item.label}</div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
+      )}
+
+      {activeSurprise && (
+        <ChallengeModal
+          surprise={activeSurprise}
+          onClose={() => setActiveSurprise(null)}
+          onSuccess={() => handleChallengeSuccess(activeSurprise.id)}
+        />
       )}
 
       <style jsx>{`
@@ -770,7 +862,7 @@ function HomeMenu({ setCurrentSection, hasSeenMessage, setHasSeenMessage }) {
           transition: all 0.2s;
           animation: folder-appear 0.6s ease-out backwards;
           position: relative;
-          background: rgba(255, 255, 255, 0.1);
+          background: rgba(255, 255, 255, 0.3);
         }
 
         @keyframes folder-appear {
@@ -800,6 +892,42 @@ function HomeMenu({ setCurrentSection, hasSeenMessage, setHasSeenMessage }) {
 
         .pixel-folder:hover .folder-icon {
           transform: scale(1.1);
+        }
+
+        .pixel-folder.locked {
+          opacity: 0.5;
+          background: rgba(100, 100, 100, 0.4);
+        }
+
+        .pixel-folder.locked:hover {
+          transform: none;
+          box-shadow: none;
+        }
+
+        .pixel-folder.completed {
+          border-color: #4CAF50;
+          background: rgba(76, 175, 80, 0.1);
+        }
+
+        .completed-badge {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          background: #4CAF50;
+          color: white;
+          padding: 4px 10px;
+          border-radius: 12px;
+          font-size: 11px;
+          font-weight: 900;
+          letter-spacing: 1px;
+        }
+
+        .unlock-hint {
+          margin-top: 8px;
+          font-size: 11px;
+          color: rgba(255, 255, 255, 0.7);
+          text-align: center;
+          font-style: italic;
         }
 
         .folder-emoji {
@@ -880,7 +1008,7 @@ function MusicSection() {
   return (
     <div className="music-section">
       <div className="section-title">
-        NUESTRAS CANCIONES
+        CANCIONES QUE ME RECUERDAN A TI
       </div>
 
       <div className="songs-container">
@@ -914,6 +1042,7 @@ function MusicSection() {
         rel="noopener noreferrer"
         className="spotify-button"
       >
+        <span className="spotify-icon">💗</span>
         ESCUCHAR EN SPOTIFY
         <span className="spotify-icon">💗</span>
       </a>
@@ -1137,6 +1266,9 @@ function MusicSection() {
 function MapSection() {
   return (
     <div className="map-section">
+        <div className="section-title">
+        NUESTRA DISTANCIA
+      </div>
       <div className="distance-card">
         {/* Distancia en KM arriba */}
         <div className="km-badge">
@@ -1174,7 +1306,7 @@ function MapSection() {
             <div className="profile-container">
               <div className="profile-wrapper">
                 <img 
-                  src="https://lh3.googleusercontent.com/d/1yH_NyWxfqQ9BYRc6dCvxS3c_TYlCvWkH" 
+                  src="/Dalel.jpg" 
                   alt="Dalel"
                   className="profile-photo"
                 />
@@ -1196,7 +1328,7 @@ function MapSection() {
             <div className="profile-container">
               <div className="profile-wrapper">
                 <img 
-                  src="https://lh3.googleusercontent.com/d/1yk0YE8gj_h7XdCQsJBj5AyJ1gKoKEPYD" 
+                  src="/Carlos.jpg" 
                   alt="Carlos"
                   className="profile-photo"
                 />
@@ -1212,8 +1344,8 @@ function MapSection() {
 
         {/* Mensaje de texto descriptivo */}
         <div className="distance-message">
-          See the distance between<br />
-          <strong>Dalel</strong> and <strong>Carlos Buccheri</strong>
+          Distancia entre
+          <strong> Dalel</strong> y <strong>Carlos</strong>
         </div>
 
         {/* Mensaje de amor */}
@@ -1223,6 +1355,21 @@ function MapSection() {
       </div>
 
       <style jsx>{`
+
+        .section-title {
+          font-size: 48px;
+          font-weight: 900;
+          color: white;
+          text-align: center;
+          margin-bottom: 50px;
+          text-shadow: 4px 4px 0px rgba(0, 0, 0, 0.3);
+          letter-spacing: 4px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 20px;
+        }
+
         .map-section {
           max-width: 700px;
           width: 100%;
@@ -1240,7 +1387,7 @@ function MapSection() {
         }
 
         .km-badge {
-          background: linear-gradient(135deg, #87a8d0 0%, #6b8fb8 100%);
+          background-color: #ff6b9d;
           color: white;
           padding: 12px 32px;
           border-radius: 50px;
@@ -1577,7 +1724,7 @@ function LetterSection() {
         }
 
         .letter-header {
-          background: linear-gradient(to bottom, #ff8fa3, #ff6b9d);
+          background-color: #ff6b9d;
           border-bottom: 4px solid #2d2256;
           padding: 20px 30px;
           display: flex;
@@ -1682,6 +1829,15 @@ function BarcaSection() {
     "Si el amor es un partido, contigo acepto ir a la prórroga y hasta a los penaltis. Eres el único madridista que tiene permiso de entrar en mi corazón azulgrana."
   ];
 
+  // Cambio automático de frases cada 5 segundos
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentPhrase((prev) => (prev + 1) % phrases.length);
+    }, 5000); // Cambia cada 5 segundos
+
+    return () => clearInterval(interval); // Limpiar intervalo al desmontar
+  }, [phrases.length]);
+
   const nextPhrase = () => {
     setCurrentPhrase((prev) => (prev + 1) % phrases.length);
   };
@@ -1694,9 +1850,10 @@ function BarcaSection() {
 
       <div className="match-window">
         <div className="match-header">
-          <div className="team-badge barca">💙</div>
+          
+          <img src="/Dalel.jpg" alt="FC Barcelona" className="team-badge barca profile-photo" />
           <div className="vs-text">VS</div>
-          <div className="team-badge madrid">⚪</div>
+           <img src="/Carlos.jpg" alt="FC Barcelona" className="team-badge madrid profile-photo" />
         </div>
 
         <div className="match-illustration">
@@ -1711,14 +1868,33 @@ function BarcaSection() {
           </div>
         </div>
 
+        <div className="couple-photo-section">
+          <div className="couple-photo-container">
+            <img 
+              src="/pareja.png" 
+              alt="Nosotros"
+              className="couple-image"
+            />
+            <div className="photo-frame"></div>
+          </div>
+        </div>
+
         <div className="phrase-container">
           <div className="phrase-text">
             "{phrases[currentPhrase]}"
           </div>
 
-          <button className="next-phrase-btn" onClick={nextPhrase}>
-            {currentPhrase === 0 ? 'SIGUIENTE FRASE ➜' : '← FRASE ANTERIOR'}
-          </button>
+          {/* Indicador de frase actual */}
+          <div className="phrase-indicator">
+            {phrases.map((_, index) => (
+              <span 
+                key={index} 
+                className={`indicator-dot ${index === currentPhrase ? 'active' : ''}`}
+                onClick={() => setCurrentPhrase(index)}
+              />
+            ))}
+          </div>
+
         </div>
 
         <div className="score-display">
@@ -1735,6 +1911,16 @@ function BarcaSection() {
       </div>
 
       <style jsx>{`
+
+        .profile-photo {
+          width: 120px;
+          height: 120px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 5px solid white;
+          background: #f0f0f0;
+        }
+
         .barca-section {
           max-width: 1000px;
           margin: 80px auto 40px;
@@ -1766,7 +1952,7 @@ function BarcaSection() {
         }
 
         .match-header {
-          background: linear-gradient(to right, #004d98 0%, #004d98 45%, #ffffff 45%, #ffffff 55%, #ffffff 55%, #ffffff 100%);
+          background: linear-gradient(to right, #ff6b9d 0%, #ff6b9d 45%, #ffffff 45%, #ffffff 55%, #ffffff 55%, #ffffff 100%);
           border-bottom: 4px solid #2d2256;
           padding: 30px;
           display: flex;
@@ -1777,14 +1963,6 @@ function BarcaSection() {
         .team-badge {
           font-size: 80px;
           animation: badge-float 2s ease-in-out infinite;
-        }
-
-        .team-badge.barca {
-          filter: drop-shadow(4px 4px 0 rgba(0, 77, 152, 0.5));
-        }
-
-        .team-badge.madrid {
-          filter: drop-shadow(4px 4px 0 rgba(255, 255, 255, 0.5));
         }
 
         @keyframes badge-float {
@@ -1805,7 +1983,7 @@ function BarcaSection() {
 
         .match-illustration {
           height: 400px;
-          background: linear-gradient(to bottom, #87ceeb 0%, #4a7c59 70%, #2d5016 100%);
+          background: linear-gradient(135deg, #ffd1dc 0%, #ffb3d9 50%, #ff8fa3 100%);
           position: relative;
           overflow: hidden;
           border-bottom: 4px solid #2d2256;
@@ -1818,6 +1996,55 @@ function BarcaSection() {
           align-items: center;
           justify-content: center;
           position: relative;
+        }
+
+        .couple-photo-section {
+          background: white;
+          padding: 40px;
+          border-bottom: 4px solid #2d2256;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 20px;
+        }
+
+        .couple-photo-container {
+          position: relative;
+          animation: photo-float 3s ease-in-out infinite;
+        }
+
+        @keyframes photo-float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-8px); }
+        }
+
+        .couple-image {
+          width: 280px;
+          height: 280px;
+          border-radius: 20px;
+          border: 8px solid white;
+          box-shadow: 
+            0 0 0 6px #ff6b9d,
+            0 0 0 10px white,
+            12px 12px 0 10px rgba(0, 0, 0, 0.3);
+          object-fit: contain;
+          display: block;
+        }
+
+        .photo-frame {
+          position: absolute;
+          top: -12px;
+          left: -12px;
+          right: -12px;
+          bottom: -12px;
+          border: 4px dashed rgba(255, 107, 157, 0.4);
+          border-radius: 24px;
+          animation: rotate-frame 20s linear infinite;
+        }
+
+        @keyframes rotate-frame {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
 
         .field-lines {
@@ -1896,12 +2123,53 @@ function BarcaSection() {
           font-weight: 600;
           text-align: center;
           font-style: italic;
-          margin-bottom: 35px;
+          margin-bottom: 25px;
           padding: 30px;
           background: white;
           border: 3px solid #ff6b9d;
           border-radius: 8px;
           box-shadow: 4px 4px 0 0 rgba(255, 107, 157, 0.3);
+          animation: phrase-fade-in 0.5s ease-out;
+        }
+
+        @keyframes phrase-fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        /* Indicador de frase */
+        .phrase-indicator {
+          display: flex;
+          justify-content: center;
+          gap: 12px;
+          margin-bottom: 25px;
+        }
+
+        .indicator-dot {
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          background: #d1d1d1;
+          border: 2px solid #c44569;
+          cursor: pointer;
+          transition: all 0.3s;
+        }
+
+        .indicator-dot:hover {
+          background: #ff8fa3;
+          transform: scale(1.2);
+        }
+
+        .indicator-dot.active {
+          background: #ff6b9d;
+          transform: scale(1.3);
+          box-shadow: 0 0 10px rgba(255, 107, 157, 0.6);
         }
 
         .next-phrase-btn {
@@ -1948,7 +2216,7 @@ function BarcaSection() {
 
         .score-label {
           font-size: 16px;
-          color: #ffd700;
+          color: #ff6b9d;
           font-weight: 900;
           letter-spacing: 3px;
           text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
@@ -1990,6 +2258,25 @@ function BarcaSection() {
             height: 300px;
           }
 
+          .couple-photo-section {
+            padding: 30px 20px;
+          }
+
+          .couple-image {
+            width: 200px;
+            height: 200px;
+            border: 6px solid white;
+            box-shadow: 
+              0 0 0 4px #ff6b9d,
+              0 0 0 8px white,
+              8px 8px 0 8px rgba(0, 0, 0, 0.3);
+          }
+
+          .couple-caption {
+            font-size: 20px;
+            letter-spacing: 2px;
+          }
+
           .phrase-container {
             padding: 30px 20px;
           }
@@ -2013,6 +2300,336 @@ function BarcaSection() {
   );
 }
 
+function ChallengeModal({ surprise, onClose, onSuccess }) {
+  const [answer, setAnswer] = useState('');
+  const [showError, setShowError] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const checkAnswer = () => {
+    let isCorrect = false;
+
+    if (surprise.challenge.type === 'question') {
+      isCorrect = answer === surprise.challenge.correctAnswer;
+    } else if (surprise.challenge.type === 'puzzle') {
+      isCorrect = answer.toLowerCase().trim() === surprise.challenge.answer.toLowerCase();
+    }
+
+    if (isCorrect) {
+      setShowSuccess(true);
+      setTimeout(() => {
+        onSuccess();
+      }, 1500);
+    } else {
+      setShowError(true);
+      setAnswer('');
+      setTimeout(() => setShowError(false), 1000);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <button className="close-modal-btn" onClick={onClose}>
+          <X size={24} />
+        </button>
+
+        <div className="challenge-header">
+          <div className="challenge-icon">🎯</div>
+          <h2 className="challenge-title">¡DESAFÍO DE AMOR!</h2>
+        </div>
+        
+        <p className="challenge-question">{surprise.challenge.question}</p>
+
+        {surprise.challenge.type === 'question' ? (
+          <div className="options-container">
+            {surprise.challenge.options.map((option, index) => (
+              <button
+                key={index}
+                className={`option-btn ${answer === option ? 'selected' : ''}`}
+                onClick={() => setAnswer(option)}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <input
+            type="text"
+            className={`challenge-input ${showError ? 'shake-error' : ''}`}
+            value={answer}
+            onChange={(e) => setAnswer(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && checkAnswer()}
+            placeholder="Escribe tu respuesta..."
+          />
+        )}
+
+        <button 
+          className="submit-challenge-btn"
+          onClick={checkAnswer}
+          disabled={!answer}
+        >
+          💗 VERIFICAR RESPUESTA 💗
+        </button>
+
+        {showError && (
+          <div className="error-challenge-message">
+            ❌ ¡Inténtalo de nuevo, mi amor!
+          </div>
+        )}
+
+        {showSuccess && (
+          <div className="success-challenge-message">
+          ¡CORRECTO! ¡Desbloqueado!
+          </div>
+        )}
+
+        <style jsx>{`
+          .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+            animation: overlay-fade-in 0.3s ease-out;
+          }
+
+          @keyframes overlay-fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+
+          .modal-content {
+            background: white;
+            border: 6px solid #2d2256;
+            box-shadow: 12px 12px 0 rgba(0, 0, 0, 0.4);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            position: relative;
+            animation: modal-pop-in 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+          }
+
+          @keyframes modal-pop-in {
+            from {
+              opacity: 0;
+              transform: scale(0.8) translateY(-50px);
+            }
+            to {
+              opacity: 1;
+              transform: scale(1) translateY(0);
+            }
+          }
+
+          .close-modal-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #ff6b9d;
+            border: 3px solid #c44569;
+            color: white;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            width: 40px;
+            height: 40px;
+          }
+
+          .close-modal-btn:hover {
+            transform: scale(1.1) rotate(90deg);
+            background: #c44569;
+          }
+
+          .challenge-header {
+            text-align: center;
+            margin-bottom: 25px;
+          }
+
+          .challenge-icon {
+            font-size: 70px;
+            margin-bottom: 15px;
+            animation: icon-bounce 1.5s ease-in-out infinite;
+          }
+
+          @keyframes icon-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+          }
+
+          .challenge-title {
+            font-size: 26px;
+            font-weight: 900;
+            color: #2d2256;
+            letter-spacing: 2px;
+            font-family: 'Courier New', monospace;
+          }
+
+          .challenge-question {
+            font-size: 19px;
+            color: #2d2256;
+            text-align: center;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+          }
+
+          .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+          }
+
+          .option-btn {
+            background: white;
+            border: 4px solid #2d2256;
+            padding: 15px 20px;
+            font-size: 16px;
+            font-weight: 700;
+            color: #2d2256;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.2);
+            font-family: 'Courier New', monospace;
+          }
+
+          .option-btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.2);
+          }
+
+          .option-btn.selected {
+            background: #ff6b9d;
+            border-color: #c44569;
+            color: white;
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.2);
+          }
+
+          .challenge-input {
+            width: 93%;
+            font-size: 18px;
+            padding: 15px;
+            border: 4px solid #2d2256;
+            box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.2);
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            color: #2d2256;
+            margin-bottom: 25px;
+          }
+
+          .challenge-input:focus {
+            outline: none;
+            border-color: #ff6b9d;
+          }
+
+          .challenge-input.shake-error {
+            animation: shake-input 0.5s;
+          }
+
+          @keyframes shake-input {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+          }
+
+          .submit-challenge-btn {
+            width: 100%;
+            background: linear-gradient(180deg, #ff6b9d 0%, #c44569 100%);
+            border: 4px solid #c44569;
+            box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.3);
+            color: white;
+            font-size: 18px;
+            font-weight: 900;
+            padding: 16px;
+            cursor: pointer;
+            letter-spacing: 2px;
+            transition: all 0.2s;
+            font-family: 'Courier New', monospace;
+          }
+
+          .submit-challenge-btn:hover:not(:disabled) {
+            transform: translate(-2px, -2px);
+            box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.3);
+          }
+
+          .submit-challenge-btn:active:not(:disabled) {
+            transform: translate(2px, 2px);
+            box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.3);
+          }
+
+          .submit-challenge-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+          }
+
+          .error-challenge-message, .success-challenge-message {
+            margin-top: 20px;
+            padding: 15px;
+            text-align: center;
+            font-weight: 900;
+            font-size: 15px;
+            letter-spacing: 1px;
+            box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.2);
+            font-family: 'Courier New', monospace;
+          }
+
+          .error-challenge-message {
+            background: #ff5252;
+            color: white;
+            border: 3px solid #d32f2f;
+            animation: shake-input 0.5s;
+          }
+
+          .success-challenge-message {
+            background: #4CAF50;
+            color: white;
+            border: 3px solid #2e7d32;
+            animation: success-pulse 0.6s;
+          }
+
+          @keyframes success-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+          }
+
+          @media (max-width: 768px) {
+            .modal-content {
+              padding: 30px 20px;
+            }
+
+            .challenge-icon {
+              font-size: 55px;
+            }
+
+            .challenge-title {
+              font-size: 20px;
+            }
+
+            .challenge-question {
+              font-size: 16px;
+            }
+
+            .submit-challenge-btn {
+              font-size: 15px;
+            }
+          }
+        `}</style>
+      </div>
+    </div>
+  );
+}
+
 function SkipperCompanion() {
   const [showTooltip, setShowTooltip] = useState(false);
 
@@ -2022,11 +2639,15 @@ function SkipperCompanion() {
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
     >
-      <div className="skipper-penguin">🐧</div>
+      <img 
+    src="/skipper.jpg" 
+    alt="Skipper el Pingüino" 
+    className="skipper-penguin"
+  />
 
       {showTooltip && (
         <div className="skipper-tooltip">
-          ¡Hola! Soy Skipper 💙
+          ¡Hola! Soy Skipper
         </div>
       )}
 
@@ -2044,6 +2665,9 @@ function SkipperCompanion() {
           animation: skipper-waddle 3s ease-in-out infinite;
           filter: drop-shadow(4px 4px 0 rgba(0, 0, 0, 0.3));
           transition: transform 0.3s;
+          width: 110px;
+          height: auto;
+          border-radius: 50%;
         }
 
         .skipper-penguin:hover {
