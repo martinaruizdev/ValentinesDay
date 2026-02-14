@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Heart, Music, Map, Mail, Trophy, Volume2, X } from 'lucide-react';
 
 // Hook para reproducir sonido de click
@@ -11,12 +11,84 @@ const useClickSound = () => {
   return playClick;
 };
 
+// Hook para música de fondo
+const useBackgroundMusic = () => {
+  const audioRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  useEffect(() => {
+    audioRef.current = new Audio('/background-music.mp3');
+    audioRef.current.loop = true;
+    audioRef.current.volume = 0.3; // Volumen al 30% para que no moleste
+
+    // Intentar reproducir automáticamente con sonido
+    const attemptAutoplay = async () => {
+      try {
+        await audioRef.current.play();
+        setIsPlaying(true);
+      } catch (err) {
+        console.log('Autoplay bloqueado, esperando interacción del usuario');
+        // Si falla el autoplay, intentar reproducir con la primera interacción
+        const playOnInteraction = async () => {
+          try {
+            await audioRef.current.play();
+            setIsPlaying(true);
+            document.removeEventListener('click', playOnInteraction);
+            document.removeEventListener('keydown', playOnInteraction);
+          } catch (e) {
+            console.log('Error al reproducir:', e);
+          }
+        };
+        document.addEventListener('click', playOnInteraction, { once: true });
+        document.addEventListener('keydown', playOnInteraction, { once: true });
+      }
+    };
+
+    attemptAutoplay();
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  const toggleMusic = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        audioRef.current.play().then(() => {
+          setIsPlaying(true);
+        }).catch(err => console.log('Error al reproducir:', err));
+      }
+    }
+  };
+
+  const pauseMusic = () => {
+    if (audioRef.current && isPlaying) {
+      audioRef.current.pause();
+    }
+  };
+
+  const resumeMusic = () => {
+    if (audioRef.current && isPlaying) {
+      audioRef.current.play();
+    }
+  };
+
+  return { isPlaying, toggleMusic, pauseMusic, resumeMusic };
+};
+
 export default function PixelValentine() {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [passcode, setPasscode] = useState('');
   const [currentSection, setCurrentSection] = useState('home');
   const [showError, setShowError] = useState(false);
   const [completedLevels, setCompletedLevels] = useState([]);
+  const { isPlaying, toggleMusic, pauseMusic, resumeMusic } = useBackgroundMusic();
 
   const [heartParticles] = useState(() => {
     return [...Array(8)].map((_, i) => ({
@@ -94,12 +166,21 @@ export default function PixelValentine() {
           showError={showError}
         />
       ) : (
-        <GameWorld
-          currentSection={currentSection}
-          setCurrentSection={setCurrentSection}
-          completedLevels={completedLevels}
-          setCompletedLevels={setCompletedLevels}
-        />
+        <>
+          <GameWorld
+            currentSection={currentSection}
+            setCurrentSection={setCurrentSection}
+            completedLevels={completedLevels}
+            setCompletedLevels={setCompletedLevels}
+            pauseMusic={pauseMusic}
+            resumeMusic={resumeMusic}
+          />
+          
+          {/* Botón de control de música */}
+          <button className="music-control-btn" onClick={toggleMusic}>
+            {isPlaying ? '🔊' : '🔇'}
+          </button>
+        </>
       )}
 
       <style jsx>{`
@@ -189,12 +270,52 @@ export default function PixelValentine() {
             opacity: 0;
           }
         }
+
+        .music-control-btn {
+          position: fixed;
+          bottom: 30px;
+          right: 30px;
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          background: #ff6b9d;
+          border: 4px solid #c44569;
+          box-shadow: 6px 6px 0 0 rgba(0, 0, 0, 0.3);
+          font-size: 28px;
+          cursor: pointer;
+          z-index: 9999;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s;
+        }
+
+        .music-control-btn:hover {
+          transform: scale(1.1);
+          box-shadow: 8px 8px 0 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .music-control-btn:active {
+          transform: scale(0.95);
+          box-shadow: 4px 4px 0 0 rgba(0, 0, 0, 0.3);
+        }
+
+        @media (max-width: 768px) {
+          .music-control-btn {
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+          }
+        }
       `}</style>
     </div>
   );
 }
 
 function PasscodeScreen({ passcode, setPasscode, checkPasscode, showError }) {
+  const playClick = useClickSound();
   return (
     <div className="passcode-overlay">
       <div className="pixel-window">
@@ -217,7 +338,7 @@ function PasscodeScreen({ passcode, setPasscode, checkPasscode, showError }) {
           />
         </div>
 
-        <button className="pixel-button" onClick={checkPasscode}>
+        <button className="pixel-button" onClick={() => { playClick(); checkPasscode(); }}>
           <Heart className="button-heart" size={20} fill="#fff" />
           JUGAR JUNTOS
           <Heart className="button-heart" size={20} fill="#fff" />
@@ -412,7 +533,7 @@ function PasscodeScreen({ passcode, setPasscode, checkPasscode, showError }) {
   );
 }
 
-function GameWorld({ currentSection, setCurrentSection, completedLevels, setCompletedLevels }) {
+function GameWorld({ currentSection, setCurrentSection, completedLevels, setCompletedLevels, pauseMusic, resumeMusic }) {
   const [hasSeenMessage, setHasSeenMessage] = useState(false);
   const playClick = useClickSound();
 
@@ -443,7 +564,7 @@ function GameWorld({ currentSection, setCurrentSection, completedLevels, setComp
         {currentSection === 'letter' && <LetterSection />}
         {currentSection === 'photos' && <PhotosSection />}
         {currentSection === 'barca' && <BarcaSection />}
-        {currentSection === 'lovereasons' && <LoveReasonsSection />}
+        {currentSection === 'lovereasons' && <LoveReasonsSection pauseMusic={pauseMusic} resumeMusic={resumeMusic} />}
 
         <style jsx>{`
           .game-section {
@@ -2338,7 +2459,36 @@ function BarcaSection() {
   );
 }
 
-function LoveReasonsSection() {
+function LoveReasonsSection({ pauseMusic, resumeMusic }) {
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handlePlay = () => {
+      if (pauseMusic) pauseMusic();
+    };
+
+    const handlePause = () => {
+      if (resumeMusic) resumeMusic();
+    };
+
+    const handleEnded = () => {
+      if (resumeMusic) resumeMusic();
+    };
+
+    video.addEventListener('play', handlePlay);
+    video.addEventListener('pause', handlePause);
+    video.addEventListener('ended', handleEnded);
+
+    return () => {
+      video.removeEventListener('play', handlePlay);
+      video.removeEventListener('pause', handlePause);
+      video.removeEventListener('ended', handleEnded);
+    };
+  }, [pauseMusic, resumeMusic]);
+
   const loveReasons = [
     "Tu dedicación y ganas de salir adelante",
     "Lo paciente, amoroso y comprensivo que eres",
@@ -2374,6 +2524,7 @@ function LoveReasonsSection() {
         <h3 className="video-title">💗 UN VIDEO ESPECIAL PARA TI 💗</h3>
         <div className="video-wrapper">
           <video
+            ref={videoRef}
             className="video-frame"
             controls
             controlsList="nodownload"
@@ -2973,7 +3124,7 @@ function ChallengeModal({ surprise, onClose, onSuccess }) {
 
           .submit-challenge-btn {
             width: 100%;
-            background: linear-gradient(180deg, #ff6b9d 0%, #c44569 100%);
+            background-color: #ff6b9d;
             border: 4px solid #c44569;
             box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.3);
             color: white;
