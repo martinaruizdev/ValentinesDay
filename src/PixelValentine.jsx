@@ -192,7 +192,7 @@ function PasscodeScreen({ passcode, setPasscode, checkPasscode, showError }) {
           PARA MI AMOR,<br />SIEMPRE 💗
         </div>
         <div className="pixel-subtitle">
-          INGRESA LA CONTRASEÑA Y ABRE CON CUIDADO. ES PARA TI.
+          INGRESA LA CONTRASEÑA Y ABRE CON CARIÑO. ES PARA TI.
         </div>
 
         <div className="passcode-box">
@@ -251,7 +251,7 @@ function PasscodeScreen({ passcode, setPasscode, checkPasscode, showError }) {
         }
 
         .pixel-title {
-          font-size: 48px;
+          font-size: 56px;
           font-weight: 900;
           color: white;
           text-shadow: 
@@ -265,7 +265,7 @@ function PasscodeScreen({ passcode, setPasscode, checkPasscode, showError }) {
         }
 
         .pixel-subtitle {
-          font-size: 18px;
+          font-size: 20px;
           color: white;
           text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5);
           margin-bottom: 40px;
@@ -1286,11 +1286,7 @@ function MapSection() {
         <div className="map-container">
           {/* Fondo de mapa satelital/ilustración */}
           <div className="map-background">
-            <img 
-  src="/tu-imagen-mapa.jpg" 
-  alt="Mapa"
-  className="map-image"
-/>
+
             {/* Efecto de líneas de mapa */}
             <svg className="map-lines" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
               <defs>
@@ -1443,8 +1439,12 @@ function MapSection() {
           left: 0;
           width: 100%;
           height: 100%;
-          opacity: 0.15;
+          opacity: 0.3;
           z-index: 0;
+          background-image: url('/mapa.jpg');
+          background-size: cover;      
+          background-position: center; 
+          background-repeat: no-repeat; 
         }
 
         .map-lines {
@@ -1569,7 +1569,6 @@ function MapSection() {
           color: #2d2256;
           font-weight: 700;
           font-family: 'Courier New', monospace;
-          box-shadow: 0 4px 10px rgba(255, 107, 157, 0.2);
         }
 
         @media (max-width: 768px) {
