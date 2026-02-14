@@ -1,6 +1,16 @@
 import React, { useState } from 'react';
 import { Heart, Music, Map, Mail, Trophy, Volume2, X } from 'lucide-react';
 
+// Hook para reproducir sonido de click
+const useClickSound = () => {
+  const playClick = () => {
+    const audio = new Audio('/click.mp3');
+    audio.volume = 0.5; // Volumen al 50%
+    audio.play().catch(err => console.log('Error playing sound:', err));
+  };
+  return playClick;
+};
+
 export default function PixelValentine() {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [passcode, setPasscode] = useState('');
@@ -404,6 +414,7 @@ function PasscodeScreen({ passcode, setPasscode, checkPasscode, showError }) {
 
 function GameWorld({ currentSection, setCurrentSection, completedLevels, setCompletedLevels }) {
   const [hasSeenMessage, setHasSeenMessage] = useState(false);
+  const playClick = useClickSound();
 
   if (currentSection === 'home') {
     return (
@@ -420,7 +431,10 @@ function GameWorld({ currentSection, setCurrentSection, completedLevels, setComp
   return (
     <>
       <div className="game-section">
-        <button className="pixel-back-btn" onClick={() => setCurrentSection('home')}>
+        <button className="pixel-back-btn" onClick={() => {
+          playClick();
+          setCurrentSection('home');
+        }}>
           <span className="arrow">←</span> VOLVER
         </button>
 
@@ -429,6 +443,7 @@ function GameWorld({ currentSection, setCurrentSection, completedLevels, setComp
         {currentSection === 'letter' && <LetterSection />}
         {currentSection === 'photos' && <PhotosSection />}
         {currentSection === 'barca' && <BarcaSection />}
+        {currentSection === 'lovereasons' && <LoveReasonsSection />}
 
         <style jsx>{`
           .game-section {
@@ -490,7 +505,6 @@ function GameWorld({ currentSection, setCurrentSection, completedLevels, setComp
         `}</style>
       </div>
 
-      {/* Skipper aparecerá en todas las secciones excepto el menú principal */}
       <SkipperCompanion />
     </>
   );
@@ -500,6 +514,7 @@ function HomeMenu({ setCurrentSection, hasSeenMessage, setHasSeenMessage, comple
   const [showBrowser, setShowBrowser] = useState(!hasSeenMessage);
   const [browserClosing, setBrowserClosing] = useState(false);
   const [activeSurprise, setActiveSurprise] = useState(null);
+  const playClick = useClickSound();
 
   const menuItems = [
     { 
@@ -508,7 +523,7 @@ function HomeMenu({ setCurrentSection, hasSeenMessage, setHasSeenMessage, comple
       color: '#ff6b9d',
       challenge: {
         type: 'question',
-        question: '¿Cuál es nuestra canción especial?',
+        question: '¿Qué canción me hace pensar en ti?',
         options: ['Mil Vidas', 'Un Verano Sin Ti', 'Me Rehúso', 'La Pregunta'],
         correctAnswer: 'Mil Vidas'
       }
@@ -540,8 +555,18 @@ function HomeMenu({ setCurrentSection, hasSeenMessage, setHasSeenMessage, comple
       color: '#a50044',
       challenge: {
         type: 'puzzle',
-        question: 'Completa: "Eres mi lugar ______"',
-        answer: 'favorito'
+        question: 'Completa: "Juntos somos un ______"',
+        answer: 'equipo'
+      }
+    },
+    { 
+      id: 'lovereasons', 
+      label: 'SORPRESA 5', 
+      color: '#d946ef',
+      challenge: {
+        type: 'wordsearch',
+        question: 'Encuentra todos los apodos que te tengo en la sopa de letras:',
+        words: ['CACHETONA', 'AMOR', 'MIVIDA', 'MAMI']
       }
     }
   ];
@@ -553,6 +578,8 @@ function HomeMenu({ setCurrentSection, hasSeenMessage, setHasSeenMessage, comple
 
   const handleFolderClick = (item, index) => {
     if (!isSurpriseUnlocked(index)) return;
+    
+    playClick(); // Reproducir sonido de click
     
     if (completedLevels.includes(item.id)) {
       setCurrentSection(item.id);
@@ -570,6 +597,7 @@ function HomeMenu({ setCurrentSection, hasSeenMessage, setHasSeenMessage, comple
   };
 
   const closeBrowser = () => {
+    playClick(); // Reproducir sonido de click
     setBrowserClosing(true);
     setTimeout(() => {
       setShowBrowser(false);
@@ -1665,8 +1693,6 @@ function LetterSection() {
       <div className="pixel-letter">
         <div className="letter-header">
           <div className="stamp">💕</div>
-          <div className="to-label">Para: Carlos</div>
-          <div className="from-label">De: Dalel</div>
         </div>
 
         <div className="letter-body">
@@ -1845,7 +1871,7 @@ function BarcaSection() {
   React.useEffect(() => {
     const interval = setInterval(() => {
       setCurrentPhrase((prev) => (prev + 1) % phrases.length);
-    }, 5000); // Cambia cada 5 segundos
+    }, 8000); // Cambia cada 5 segundos
 
     return () => clearInterval(interval); // Limpiar intervalo al desmontar
   }, [phrases.length]);
@@ -2312,12 +2338,215 @@ function BarcaSection() {
   );
 }
 
+function LoveReasonsSection() {
+  const loveReasons = [
+    "Tu dedicación y ganas de salir adelante",
+    "Lo paciente, amoroso y comprensivo que eres",
+    "Tienes un enorme corazón",
+    "Sabes lo que quieres y vas por ello, eres muy decisivo",
+    "Tu seguridad, sabiduría e inteligencia",
+    "Tu carisma y sentido del humor",
+    "Tu habilidad de solucionar cualquier cosa",
+    "Lo detallista que eres",
+    "Tu honestidad y transparencia",
+    "Tu cuerpo, tu rostro, tú, completamente"
+  ];
+
+  return (
+    <div className="lovereasons-section">
+      <div className="section-title">
+        10 COSAS QUE AMO DE TI
+      </div>
+
+      <div className="reward-section">
+        <div className="love-reasons-list">
+          {loveReasons.map((reason, index) => (
+            <div key={index} className="love-reason-item">
+              <span className="reason-number">{index + 1}</span>
+              <span className="reason-text">{reason}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Video al final */}
+      <div className="video-section">
+        <h3 className="video-title">💗 UN VIDEO ESPECIAL PARA TI 💗</h3>
+        <div className="video-wrapper">
+          <video
+            className="video-frame"
+            controls
+            controlsList="nodownload"
+            preload="metadata"
+            playsInline
+          >
+            <source src="/video.mp4" type="video/mp4" />
+            Tu navegador no soporta la reproducción de video.
+          </video>
+        </div>
+      </div>
+
+      <style jsx>{`
+        .lovereasons-section {
+          max-width: 900px;
+          margin: 80px auto 40px;
+          padding: 20px;
+        }
+
+        .section-title {
+          font-size: 48px;
+          font-weight: 900;
+          color: white;
+          text-align: center;
+          margin-bottom: 50px;
+          text-shadow: 4px 4px 0px rgba(0, 0, 0, 0.3);
+          letter-spacing: 4px;
+        }
+
+        .reward-section {
+          background: white;
+          border: 4px solid #2d2256;
+          box-shadow: 12px 12px 0 rgba(0, 0, 0, 0.3);
+          padding: 40px;
+          margin-bottom: 40px;
+        }
+
+        .love-reasons-list {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        .love-reason-item {
+          display: flex;
+          gap: 20px;
+          align-items: flex-start;
+          padding: 20px;
+          background: #fff5f8;
+          border: 3px solid #ff6b9d;
+          border-radius: 8px;
+          animation: reason-appear 0.5s ease-out backwards;
+        }
+
+        .love-reason-item:nth-child(1) { animation-delay: 0.1s; }
+        .love-reason-item:nth-child(2) { animation-delay: 0.2s; }
+        .love-reason-item:nth-child(3) { animation-delay: 0.3s; }
+        .love-reason-item:nth-child(4) { animation-delay: 0.4s; }
+        .love-reason-item:nth-child(5) { animation-delay: 0.5s; }
+        .love-reason-item:nth-child(6) { animation-delay: 0.6s; }
+        .love-reason-item:nth-child(7) { animation-delay: 0.7s; }
+        .love-reason-item:nth-child(8) { animation-delay: 0.8s; }
+        .love-reason-item:nth-child(9) { animation-delay: 0.9s; }
+        .love-reason-item:nth-child(10) { animation-delay: 1s; }
+
+        @keyframes reason-appear {
+          from {
+            opacity: 0;
+            transform: translateX(-30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        .reason-number {
+          font-size: 28px;
+          font-weight: 900;
+          color: #ff6b9d;
+          min-width: 40px;
+          font-family: 'Courier New', monospace;
+        }
+
+        .reason-text {
+          font-size: 18px;
+          color: #2d2256;
+          line-height: 1.6;
+          font-weight: 600;
+          font-family: 'Courier New', monospace;
+        }
+
+        .video-section {
+          background: white;
+          border: 4px solid #2d2256;
+          box-shadow: 12px 12px 0 rgba(0, 0, 0, 0.3);
+          padding: 40px;
+        }
+
+        .video-title {
+          font-size: 32px;
+          font-weight: 900;
+          color: #ff6b9d;
+          text-align: center;
+          margin-top: 0px;
+          margin-bottom: 30px;
+          font-family: 'Courier New', monospace;
+          letter-spacing: 2px;
+        }
+
+        .video-wrapper {
+          position: relative;
+          width: 100%;
+          padding-bottom: 56.25%; /* 16:9 aspect ratio */
+          height: 0;
+          overflow: hidden;
+        }
+
+        .video-frame {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          border: 4px solid #2d2256;
+          border-radius: 8px;
+          box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 768px) {
+          .section-title {
+            font-size: 32px;
+          }
+
+          .reward-section {
+            padding: 25px 20px;
+          }
+
+          .reason-number {
+            font-size: 22px;
+            min-width: 35px;
+          }
+
+          .reason-text {
+            font-size: 15px;
+          }
+
+          .video-title {
+            font-size: 24px;
+          }
+
+          .video-section {
+            padding: 25px 20px;
+          }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 function ChallengeModal({ surprise, onClose, onSuccess }) {
   const [answer, setAnswer] = useState('');
   const [showError, setShowError] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const playClick = useClickSound();
+  
+  // Estados para la sopa de letras
+  const [foundWords, setFoundWords] = useState([]);
+  const [selectedCells, setSelectedCells] = useState([]);
+  const [isSelecting, setIsSelecting] = useState(false);
 
   const checkAnswer = () => {
+    playClick(); // Reproducir sonido al verificar respuesta
     let isCorrect = false;
 
     if (surprise.challenge.type === 'question') {
@@ -2338,6 +2567,77 @@ function ChallengeModal({ surprise, onClose, onSuccess }) {
     }
   };
 
+  // Lógica para la sopa de letras
+  const grid = [
+    ['C', 'A', 'C', 'H', 'E', 'T', 'O', 'N', 'A', 'X', 'M', 'Z'],
+    ['R', 'M', 'K', 'L', 'P', 'Q', 'W', 'E', 'R', 'T', 'A', 'Y'],
+    ['A', 'M', 'O', 'R', 'N', 'M', 'X', 'S', 'D', 'F', 'M', 'U'],
+    ['Z', 'Q', 'T', 'Y', 'U', 'I', 'O', 'P', 'L', 'K', 'I', 'I'],
+    ['W', 'R', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'O'],
+    ['M', 'I', 'V', 'I', 'D', 'A', 'Z', 'X', 'C', 'V', 'B', 'P'],
+    ['N', 'M', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'A'],
+    ['P', 'L', 'K', 'J', 'H', 'G', 'F', 'D', 'S', 'A', 'Q', 'S'],
+    ['Z', 'X', 'C', 'V', 'B', 'N', 'M', 'L', 'K', 'J', 'H', 'D'],
+    ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', 'A', 'F'],
+    ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Z', 'X', 'G'],
+    ['C', 'V', 'B', 'N', 'M', 'Q', 'W', 'E', 'R', 'T', 'Y', 'H']
+  ];
+
+  const wordPositions = {
+    'CACHETONA': [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [0, 6], [0, 7], [0, 8]],
+    'AMOR': [[2, 0], [2, 1], [2, 2], [2, 3]],
+    'MIVIDA': [[5, 0], [5, 1], [5, 2], [5, 3], [5, 4], [5, 5]],
+    'MAMI': [[0, 10], [1, 10], [2, 10], [3, 10]]
+  };
+
+  const handleMouseDown = (row, col) => {
+    setIsSelecting(true);
+    setSelectedCells([[row, col]]);
+  };
+
+  const handleMouseEnter = (row, col) => {
+    if (isSelecting) {
+      setSelectedCells(prev => [...prev, [row, col]]);
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsSelecting(false);
+    checkWordSearch();
+    setSelectedCells([]);
+  };
+
+  const checkWordSearch = () => {
+    const selectedWord = selectedCells.map(([r, c]) => grid[r][c]).join('');
+    const reversedWord = selectedWord.split('').reverse().join('');
+    
+    if (surprise.challenge.words) {
+      surprise.challenge.words.forEach(word => {
+        if ((selectedWord === word || reversedWord === word) && !foundWords.includes(word)) {
+          const newFoundWords = [...foundWords, word];
+          setFoundWords(newFoundWords);
+          
+          if (newFoundWords.length === surprise.challenge.words.length) {
+            setShowSuccess(true);
+            setTimeout(() => {
+              onSuccess();
+            }, 1500);
+          }
+        }
+      });
+    }
+  };
+
+  const isCellSelected = (row, col) => {
+    return selectedCells.some(([r, c]) => r === row && c === col);
+  };
+
+  const isCellFound = (row, col) => {
+    return foundWords.some(word => {
+      return wordPositions[word]?.some(([r, c]) => r === row && c === col);
+    });
+  };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -2346,19 +2646,57 @@ function ChallengeModal({ surprise, onClose, onSuccess }) {
         </button>
 
         <div className="challenge-header">
-          <div className="challenge-icon">🎯</div>
+          <div className="challenge-icon">{surprise.challenge.type === 'wordsearch' ? '🔍' : '🎯'}</div>
           <h2 className="challenge-title">¡DESAFÍO DE AMOR!</h2>
         </div>
         
         <p className="challenge-question">{surprise.challenge.question}</p>
 
-        {surprise.challenge.type === 'question' ? (
+        {surprise.challenge.type === 'wordsearch' ? (
+          <div className="wordsearch-challenge">
+            <div className="words-to-find-modal">
+              {surprise.challenge.words.map(word => (
+                <div 
+                  key={word} 
+                  className={`word-item-modal ${foundWords.includes(word) ? 'found' : ''}`}
+                >
+                  {foundWords.includes(word) ? '✓ ' : '○ '}
+                  {word === 'MIVIDA' ? 'MI VIDA' : word}
+                </div>
+              ))}
+            </div>
+
+            <div 
+              className="grid-container-modal"
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+            >
+              {grid.map((row, rowIndex) => (
+                <div key={rowIndex} className="grid-row-modal">
+                  {row.map((letter, colIndex) => (
+                    <div
+                      key={`${rowIndex}-${colIndex}`}
+                      className={`grid-cell-modal ${isCellSelected(rowIndex, colIndex) ? 'selected' : ''} ${isCellFound(rowIndex, colIndex) ? 'found' : ''}`}
+                      onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
+                      onMouseEnter={() => handleMouseEnter(rowIndex, colIndex)}
+                    >
+                      {letter}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : surprise.challenge.type === 'question' ? (
           <div className="options-container">
             {surprise.challenge.options.map((option, index) => (
               <button
                 key={index}
                 className={`option-btn ${answer === option ? 'selected' : ''}`}
-                onClick={() => setAnswer(option)}
+                onClick={() => {
+                  playClick();
+                  setAnswer(option);
+                }}
               >
                 {option}
               </button>
@@ -2375,13 +2713,15 @@ function ChallengeModal({ surprise, onClose, onSuccess }) {
           />
         )}
 
-        <button 
-          className="submit-challenge-btn"
-          onClick={checkAnswer}
-          disabled={!answer}
-        >
-          💗 VERIFICAR RESPUESTA 💗
-        </button>
+        {surprise.challenge.type !== 'wordsearch' && (
+          <button 
+            className="submit-challenge-btn"
+            onClick={checkAnswer}
+            disabled={!answer}
+          >
+            💗 VERIFICAR RESPUESTA 💗
+          </button>
+        )}
 
         {showError && (
           <div className="error-challenge-message">
@@ -2553,6 +2893,82 @@ function ChallengeModal({ surprise, onClose, onSuccess }) {
             0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-10px); }
             75% { transform: translateX(10px); }
+          }
+
+          .wordsearch-challenge {
+            margin-bottom: 20px;
+          }
+
+          .words-to-find-modal {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+          }
+
+          .word-item-modal {
+            font-size: 14px;
+            font-weight: 900;
+            color: #2d2256;
+            padding: 6px 14px;
+            border: 3px solid #2d2256;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s;
+          }
+
+          .word-item-modal.found {
+            background: #4CAF50;
+            color: white;
+            border-color: #2e7d32;
+          }
+
+          .grid-container-modal {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            user-select: none;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: fit-content;
+          }
+
+          .grid-row-modal {
+            display: flex;
+          }
+
+          .grid-cell-modal {
+            width: 32px;
+            height: 32px;
+            border: 2px solid #2d2256;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: 900;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+            background: white;
+            color: #2d2256;
+            transition: all 0.2s;
+          }
+
+          .grid-cell-modal:hover {
+            background: #ffe6f0;
+          }
+
+          .grid-cell-modal.selected {
+            background: #ffb3d9;
+            transform: scale(1.05);
+          }
+
+          .grid-cell-modal.found {
+            background: #4CAF50;
+            color: white;
+            border-color: #2e7d32;
           }
 
           .submit-challenge-btn {
