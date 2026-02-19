@@ -565,6 +565,8 @@ function GameWorld({ currentSection, setCurrentSection, completedLevels, setComp
         {currentSection === 'photos' && <PhotosSection />}
         {currentSection === 'barca' && <BarcaSection />}
         {currentSection === 'lovereasons' && <LoveReasonsSection pauseMusic={pauseMusic} resumeMusic={resumeMusic} />}
+        {currentSection === 'whosmorelikely' && <WhoIsMoreSection />}
+        
 
         <style jsx>{`
           .game-section {
@@ -688,6 +690,31 @@ function HomeMenu({ setCurrentSection, hasSeenMessage, setHasSeenMessage, comple
         type: 'wordsearch',
         question: 'Encuentra todos los apodos en la sopa de letras:',
         words: ['CACHETONA', 'AMOR', 'MIVIDA', 'MAMI']
+      }
+    },
+    { 
+      id: 'whosmorelikely', 
+      label: 'SORPRESA 6', 
+      color: '#f59e0b',
+      challenge: {
+        type: 'whosmorelikely',
+        questions: [
+          {
+            question: '¿Quién se pondría celoso más rápido?',
+            options: ['Carlos', 'Dalel', 'Ambos'],
+            correctAnswer: 'Carlos'
+          },
+          {
+            question: '¿Quién lloraría durante una película?',
+            options: ['Carlos', 'Dalel', 'Ambos'],
+            correctAnswer: 'Dalel'
+          },
+          {
+            question: '¿Quién haría lo que fuera por la otra persona?',
+            options: ['Carlos', 'Dalel', 'Ambos'],
+            correctAnswer: 'Ambos'
+          }
+        ]
       }
     }
   ];
@@ -2459,6 +2486,689 @@ function BarcaSection() {
   );
 }
 
+
+function MoviesSection() {
+  // Cargar películas desde localStorage al iniciar
+  const [movies, setMovies] = useState(() => {
+    const saved = localStorage.getItem('movies');
+    if (saved) {
+      return JSON.parse(saved);
+    }
+    return [
+      { id: 1, title: 'Inception', rating: 0 },
+      { id: 2, title: 'The Notebook', rating: 0 },
+      { id: 3, title: 'Interstellar', rating: 0 }
+    ];
+  });
+  
+  const [newMovieTitle, setNewMovieTitle] = useState('');
+  const [showAddForm, setShowAddForm] = useState(false);
+
+  // Guardar en localStorage cada vez que cambian las películas
+  useEffect(() => {
+    localStorage.setItem('movies', JSON.stringify(movies));
+  }, [movies]);
+
+  const handleRating = (movieId, rating) => {
+    setMovies(movies.map(movie => 
+      movie.id === movieId ? { ...movie, rating } : movie
+    ));
+  };
+
+  const addMovie = () => {
+    if (newMovieTitle.trim()) {
+      const newMovie = {
+        id: Date.now(),
+        title: newMovieTitle.trim(),
+        rating: 0
+      };
+      setMovies([...movies, newMovie]);
+      setNewMovieTitle('');
+      setShowAddForm(false);
+    }
+  };
+
+  const deleteMovie = (movieId) => {
+    setMovies(movies.filter(movie => movie.id !== movieId));
+  };
+
+  const getAverageRating = () => {
+    const ratedMovies = movies.filter(m => m.rating > 0);
+    if (ratedMovies.length === 0) return 0;
+    const sum = ratedMovies.reduce((acc, m) => acc + m.rating, 0);
+    return (sum / ratedMovies.length).toFixed(1);
+  };
+
+  return (
+    <div className="movies-section">
+      <div className="section-title">
+        🎬 NUESTRAS PELÍCULAS 🎬
+      </div>
+
+      <div className="movies-container">
+        <div className="movies-header">
+          <div className="stats-box">
+            <div className="stat-item">
+              <span className="stat-number">{movies.length}</span>
+              <span className="stat-label">Películas</span>
+            </div>
+            <div className="stat-divider"></div>
+            <div className="stat-item">
+              <span className="stat-number">⭐ {getAverageRating()}</span>
+              <span className="stat-label">Promedio</span>
+            </div>
+          </div>
+
+          <button 
+            className="add-movie-btn"
+            onClick={() => setShowAddForm(!showAddForm)}
+          >
+            {showAddForm ? '✖ Cancelar' : '+ Agregar Película'}
+          </button>
+        </div>
+
+        {showAddForm && (
+          <div className="add-movie-form">
+            <input
+              type="text"
+              className="movie-input"
+              value={newMovieTitle}
+              onChange={(e) => setNewMovieTitle(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && addMovie()}
+              placeholder="Nombre de la película..."
+              autoFocus
+            />
+            <button className="save-movie-btn" onClick={addMovie}>
+              Guardar
+            </button>
+          </div>
+        )}
+
+        <div className="movies-list">
+          {movies.map((movie, index) => (
+            <div key={movie.id} className="movie-card" style={{ animationDelay: `${index * 0.1}s` }}>
+              <div className="movie-header">
+                <h3 className="movie-title">🎬 {movie.title}</h3>
+                <button 
+                  className="delete-movie-btn"
+                  onClick={() => deleteMovie(movie.id)}
+                  title="Eliminar película"
+                >
+                  ✖
+                </button>
+              </div>
+              
+              <div className="rating-container">
+                <div className="rating-label">Tu calificación:</div>
+                <div className="stars">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      className={`star-btn ${movie.rating >= star ? 'filled' : ''}`}
+                      onClick={() => handleRating(movie.id, star)}
+                      title={`${star} estrella${star > 1 ? 's' : ''}`}
+                    >
+                      ⭐
+                    </button>
+                  ))}
+                </div>
+                {movie.rating > 0 && (
+                  <div className="rating-value">{movie.rating}/5</div>
+                )}
+              </div>
+            </div>
+          ))}
+
+          {movies.length === 0 && (
+            <div className="empty-state">
+              <div className="empty-icon">🎬</div>
+              <p>No hay películas aún. ¡Agrega la primera!</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <style jsx>{`
+        .movies-section {
+          max-width: 900px;
+          margin: 80px auto 40px;
+          padding: 20px;
+        }
+
+        .section-title {
+          font-size: 48px;
+          font-weight: 900;
+          color: white;
+          text-align: center;
+          margin-bottom: 50px;
+          text-shadow: 4px 4px 0px rgba(0, 0, 0, 0.3);
+          letter-spacing: 4px;
+        }
+
+        .movies-container {
+          background: white;
+          border: 4px solid #2d2256;
+          box-shadow: 12px 12px 0 rgba(0, 0, 0, 0.3);
+          padding: 40px;
+        }
+
+        .movies-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 30px;
+          gap: 20px;
+          flex-wrap: wrap;
+        }
+
+        .stats-box {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          background: #f5f5f5;
+          border: 3px solid #2d2256;
+          padding: 15px 25px;
+          border-radius: 8px;
+        }
+
+        .stat-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .stat-number {
+          font-size: 28px;
+          font-weight: 900;
+          color: #f59e0b;
+          font-family: 'Courier New', monospace;
+        }
+
+        .stat-label {
+          font-size: 12px;
+          color: #2d2256;
+          font-weight: 700;
+          font-family: 'Courier New', monospace;
+          text-transform: uppercase;
+        }
+
+        .stat-divider {
+          width: 2px;
+          height: 40px;
+          background: #2d2256;
+        }
+
+        .add-movie-btn {
+          background: #f59e0b;
+          border: 4px solid #d97706;
+          box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.3);
+          color: white;
+          font-size: 16px;
+          font-weight: 900;
+          padding: 12px 24px;
+          cursor: pointer;
+          font-family: 'Courier New', monospace;
+          transition: all 0.2s;
+        }
+
+        .add-movie-btn:hover {
+          transform: translate(2px, 2px);
+          box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .add-movie-btn:active {
+          transform: translate(4px, 4px);
+          box-shadow: 0 0 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .add-movie-form {
+          display: flex;
+          gap: 10px;
+          margin-bottom: 30px;
+          animation: form-appear 0.3s ease-out;
+        }
+
+        @keyframes form-appear {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .movie-input {
+          flex: 1;
+          font-size: 16px;
+          padding: 12px;
+          border: 3px solid #2d2256;
+          font-family: 'Courier New', monospace;
+          font-weight: 600;
+        }
+
+        .movie-input:focus {
+          outline: none;
+          border-color: #f59e0b;
+        }
+
+        .save-movie-btn {
+          background: #10b981;
+          border: 3px solid #059669;
+          box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.2);
+          color: white;
+          font-size: 16px;
+          font-weight: 900;
+          padding: 12px 24px;
+          cursor: pointer;
+          font-family: 'Courier New', monospace;
+          transition: all 0.2s;
+        }
+
+        .save-movie-btn:hover {
+          transform: translate(2px, 2px);
+          box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .movies-list {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        .movie-card {
+          background: #f9fafb;
+          border: 3px solid #2d2256;
+          border-radius: 8px;
+          padding: 20px;
+          animation: card-appear 0.4s ease-out backwards;
+        }
+
+        @keyframes card-appear {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        .movie-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 15px;
+        }
+
+        .movie-title {
+          font-size: 20px;
+          font-weight: 900;
+          color: #2d2256;
+          font-family: 'Courier New', monospace;
+          margin: 0;
+        }
+
+        .delete-movie-btn {
+          background: #ef4444;
+          border: 2px solid #dc2626;
+          color: white;
+          font-size: 14px;
+          font-weight: 900;
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s;
+        }
+
+        .delete-movie-btn:hover {
+          transform: scale(1.1);
+          background: #dc2626;
+        }
+
+        .rating-container {
+          display: flex;
+          align-items: center;
+          gap: 15px;
+          flex-wrap: wrap;
+        }
+
+        .rating-label {
+          font-size: 14px;
+          font-weight: 700;
+          color: #2d2256;
+          font-family: 'Courier New', monospace;
+        }
+
+        .stars {
+          display: flex;
+          gap: 5px;
+        }
+
+        .star-btn {
+          background: none;
+          border: none;
+          font-size: 28px;
+          cursor: pointer;
+          transition: all 0.2s;
+          filter: grayscale(100%);
+          opacity: 0.3;
+        }
+
+        .star-btn:hover {
+          transform: scale(1.2);
+          opacity: 0.6;
+        }
+
+        .star-btn.filled {
+          filter: grayscale(0%);
+          opacity: 1;
+          animation: star-fill 0.3s ease-out;
+        }
+
+        @keyframes star-fill {
+          0% {
+            transform: scale(0.5) rotate(-45deg);
+          }
+          50% {
+            transform: scale(1.3) rotate(10deg);
+          }
+          100% {
+            transform: scale(1) rotate(0deg);
+          }
+        }
+
+        .rating-value {
+          font-size: 16px;
+          font-weight: 900;
+          color: #f59e0b;
+          font-family: 'Courier New', monospace;
+          padding: 5px 12px;
+          background: #fef3c7;
+          border: 2px solid #f59e0b;
+          border-radius: 20px;
+        }
+
+        .empty-state {
+          text-align: center;
+          padding: 60px 20px;
+          color: #9ca3af;
+        }
+
+        .empty-icon {
+          font-size: 64px;
+          margin-bottom: 20px;
+          opacity: 0.5;
+        }
+
+        .empty-state p {
+          font-size: 18px;
+          font-family: 'Courier New', monospace;
+          font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+          .section-title {
+            font-size: 32px;
+          }
+
+          .movies-container {
+            padding: 25px 20px;
+          }
+
+          .movies-header {
+            flex-direction: column;
+            align-items: stretch;
+          }
+
+          .stats-box {
+            justify-content: center;
+          }
+
+          .movie-title {
+            font-size: 18px;
+          }
+
+          .star-btn {
+            font-size: 24px;
+          }
+
+          .add-movie-form {
+            flex-direction: column;
+          }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+function WhoIsMoreSection() {
+  return (
+    <div className="whoismore-section">
+      <div className="section-title">
+        ¿QUIÉN ES MÁS PROBABLE?
+      </div>
+
+      <div className="whoismore-container">
+
+        <div className="results-grid">
+          <div className="result-card">
+            <div className="question-text">¿Quién se pondría celoso más rápido?</div>
+            <div className="answer-reveal">
+              <div className="answer-badge carlos">Carlos</div>
+            </div>
+          </div>
+
+          <div className="result-card">
+            <div className="question-text">¿Quién lloraría durante una película?</div>
+            <div className="answer-reveal">
+              <div className="answer-badge dalel">Dalel</div>
+            </div>
+          </div>
+
+          <div className="result-card">
+            <div className="question-text">¿Quién haría lo que fuera por la otra persona?</div>
+            <div className="answer-reveal">
+              <div className="answer-badge both">Ambos</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="final-message">
+                          <img 
+                  src="/snoopy.jpeg" 
+                  alt="Snoopy"
+                  className="snoopy"
+                />
+
+        </div>
+      </div>
+
+      <style jsx>{`
+        .whoismore-section {
+          max-width: 900px;
+          margin: 80px auto 40px;
+          padding: 20px;
+        }
+
+        .section-title {
+          font-size: 48px;
+          font-weight: 900;
+          color: white;
+          text-align: center;
+          margin-bottom: 50px;
+          text-shadow: 4px 4px 0px rgba(0, 0, 0, 0.3);
+          letter-spacing: 4px;
+        }
+
+        .whoismore-container {
+          background: white;
+          border: 4px solid #2d2256;
+          box-shadow: 12px 12px 0 rgba(0, 0, 0, 0.3);
+          padding: 40px;
+        }
+
+        .results-grid {
+          display: flex;
+          flex-direction: column;
+          gap: 25px;
+          margin-bottom: 40px;
+        }
+
+        .result-card {
+          background: #f5f5f5;
+          border: 4px solid #2d2256;
+          border-radius: 8px;
+          padding: 25px;
+          animation: card-appear 0.5s ease-out backwards;
+        }
+
+        .result-card:nth-child(1) { animation-delay: 0.1s; }
+        .result-card:nth-child(2) { animation-delay: 0.3s; }
+        .result-card:nth-child(3) { animation-delay: 0.5s; }
+
+        @keyframes card-appear {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .question-text {
+          font-size: 22px;
+          font-weight: 900;
+          color: #2d2256;
+          font-family: 'Courier New', monospace;
+          margin-bottom: 15px;
+          text-align: center;
+        }
+
+        .answer-reveal {
+          display: flex;
+          justify-content: center;
+          margin-top: 15px;
+        }
+
+        .answer-badge {
+          font-size: 24px;
+          font-weight: 900;
+          padding: 15px 30px;
+          border-radius: 50px;
+          font-family: 'Courier New', monospace;
+          border: 4px solid;
+          box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.2);
+          animation: badge-pop 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) backwards;
+        }
+
+        .result-card:nth-child(1) .answer-badge { animation-delay: 0.3s; }
+        .result-card:nth-child(2) .answer-badge { animation-delay: 0.5s; }
+        .result-card:nth-child(3) .answer-badge { animation-delay: 0.7s; }
+
+        @keyframes badge-pop {
+          from {
+            transform: scale(0);
+            opacity: 0;
+          }
+          to {
+            transform: scale(1);
+            opacity: 1;
+          }
+        }
+
+        .answer-badge.carlos {
+          background: #ff6b9d;
+          color: white;
+          border-color: #c44569;
+        }
+
+        .answer-badge.dalel {
+          background: #ff6b9d;
+          color: white;
+          border-color: #c44569;
+        }
+
+        .answer-badge.both {
+          background: #ff6b9d;
+          color: white;
+          border-color: #c44569;
+        }
+
+        .final-message {
+          background: #fff5f8;
+          border: 4px solid #ff6b9d;
+          border-radius: 8px;
+          padding: 30px;
+          margin-top: 30px;
+        }
+
+        .final-text {
+          font-size: 18px;
+          color: #2d2256;
+          line-height: 1.8;
+          margin-bottom: 20px;
+          font-family: 'Courier New', monospace;
+          text-align: center;
+        }
+
+        .snoopy {
+            display: block;
+            width: 500px;
+            height: 500px;
+            object-fit: cover;
+            border-radius: 5%;
+            border: 4px solid #ff6b9d;
+            box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.15);
+            margin: 0 auto;
+        }
+
+
+        @media (max-width: 768px) {
+          .section-title {
+            font-size: 32px;
+          }
+
+          .whoismore-container {
+            padding: 25px 20px;
+          }
+
+          .intro-text {
+            font-size: 16px;
+            padding: 15px;
+          }
+
+          .question-text {
+            font-size: 18px;
+          }
+
+          .answer-badge {
+            font-size: 20px;
+            padding: 12px 24px;
+          }
+
+          .final-text {
+            font-size: 16px;
+          }
+
+            .snoopy {
+    width: 300px;
+    height: 300px;
+  }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 function LoveReasonsSection({ pauseMusic, resumeMusic }) {
   const videoRef = useRef(null);
 
@@ -2696,6 +3406,47 @@ function ChallengeModal({ surprise, onClose, onSuccess }) {
   const [selectedCells, setSelectedCells] = useState([]);
   const [isSelecting, setIsSelecting] = useState(false);
 
+  // Estados para ¿Quién es más probable?
+  const [wmlCurrentQuestion, setWmlCurrentQuestion] = useState(0);
+  const [wmlSelected, setWmlSelected] = useState(null);
+  const [wmlShowResult, setWmlShowResult] = useState(false);
+  const [wmlCorrect, setWmlCorrect] = useState(false);
+
+  const handleWmlAnswer = (option) => {
+    if (wmlShowResult) return;
+    playClick();
+    setWmlSelected(option);
+    const isCorrect = option === surprise.challenge.questions[wmlCurrentQuestion].correctAnswer;
+    setWmlCorrect(isCorrect);
+    setWmlShowResult(true);
+
+    if (isCorrect) {
+      const nextQuestion = wmlCurrentQuestion + 1;
+      if (nextQuestion >= surprise.challenge.questions.length) {
+        // All questions answered correctly
+        setTimeout(() => {
+          setShowSuccess(true);
+          setTimeout(() => onSuccess(), 1500);
+        }, 1200);
+      } else {
+        setTimeout(() => {
+          setWmlCurrentQuestion(nextQuestion);
+          setWmlSelected(null);
+          setWmlShowResult(false);
+          setWmlCorrect(false);
+        }, 1200);
+      }
+    } else {
+      setTimeout(() => {
+        setWmlSelected(null);
+        setWmlShowResult(false);
+        setWmlCorrect(false);
+        setShowError(true);
+        setTimeout(() => setShowError(false), 1000);
+      }, 1200);
+    }
+  };
+
   const checkAnswer = () => {
     playClick(); // Reproducir sonido al verificar respuesta
     let isCorrect = false;
@@ -2750,7 +3501,33 @@ function ChallengeModal({ surprise, onClose, onSuccess }) {
       setSelectedCells(prev => prev.filter((_, i) => i !== cellIndex));
     } else {
       // Si no está seleccionada, agregarla
-      setSelectedCells(prev => [...prev, [row, col]]);
+      const newSelectedCells = [...selectedCells, [row, col]];
+      setSelectedCells(newSelectedCells);
+
+      // Verificación automática al llegar al largo exacto de alguna palabra
+      if (surprise.challenge.words) {
+        let wordFound = false;
+        surprise.challenge.words.forEach(word => {
+          if (foundWords.includes(word)) return;
+          const positions = wordPositions[word];
+          if (!positions || positions.length !== newSelectedCells.length) return;
+
+          const wordPositionsSet = new Set(positions.map(([r, c]) => `${r},${c}`));
+          const areEqual = newSelectedCells.every(([r, c]) => wordPositionsSet.has(`${r},${c}`));
+
+          if (areEqual) {
+            const newFoundWords = [...foundWords, word];
+            setFoundWords(newFoundWords);
+            setSelectedCells([]);
+            wordFound = true;
+
+            if (newFoundWords.length === surprise.challenge.words.length) {
+              setShowSuccess(true);
+              setTimeout(() => onSuccess(), 1500);
+            }
+          }
+        });
+      }
     }
   };
 
@@ -2840,13 +3617,42 @@ function ChallengeModal({ surprise, onClose, onSuccess }) {
         </button>
 
         <div className="challenge-header">
-          <div className="challenge-icon">{surprise.challenge.type === 'wordsearch' ? '🔍' : '🎯'}</div>
-          <h2 className="challenge-title">¡DESAFÍO DE AMOR!</h2>
+          <div className="challenge-icon">{surprise.challenge.type === 'wordsearch' ? '🔍' : surprise.challenge.type === 'whosmorelikely' ? '🤔' : '🎯'}</div>
+          <h2 className="challenge-title">{surprise.challenge.type === 'whosmorelikely' ? '¿QUIÉN ES MÁS PROBABLE?' : '¡DESAFÍO DE AMOR!'}</h2>
         </div>
         
-        <p className="challenge-question">{surprise.challenge.question}</p>
+        {surprise.challenge.type !== 'whosmorelikely' && (
+          <p className="challenge-question">{surprise.challenge.question}</p>
+        )}
 
-        {surprise.challenge.type === 'wordsearch' ? (
+        {surprise.challenge.type === 'whosmorelikely' ? (
+          <div className="wml-challenge">
+            <div className="wml-progress">
+              {surprise.challenge.questions.map((_, i) => (
+                <div key={i} className={`wml-dot ${i < wmlCurrentQuestion ? 'done' : i === wmlCurrentQuestion ? 'active' : ''}`} />
+              ))}
+            </div>
+            <p className="challenge-question">{surprise.challenge.questions[wmlCurrentQuestion].question}</p>
+            <div className="wml-options">
+              {surprise.challenge.questions[wmlCurrentQuestion].options.map((option) => {
+                let btnClass = 'wml-option-btn';
+                if (wmlShowResult && wmlSelected === option) {
+                  btnClass += wmlCorrect ? ' correct' : ' wrong';
+                }
+                return (
+                  <button
+                    key={option}
+                    className={btnClass}
+                    onClick={() => handleWmlAnswer(option)}
+                    disabled={wmlShowResult}
+                  >
+                    {option === 'Carlos' ? 'Carlos' : option === 'Dalel' ? 'Dalel' : 'Ambos'}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : surprise.challenge.type === 'wordsearch' ? (
           <div className="wordsearch-challenge">
             <div className="words-to-find-modal">
               {surprise.challenge.words.map(word => (
@@ -2931,7 +3737,7 @@ function ChallengeModal({ surprise, onClose, onSuccess }) {
           />
         )}
 
-        {surprise.challenge.type !== 'wordsearch' && (
+        {surprise.challenge.type !== 'wordsearch' && surprise.challenge.type !== 'whosmorelikely' && (
           <button 
             className="submit-challenge-btn"
             onClick={checkAnswer}
@@ -3117,6 +3923,82 @@ function ChallengeModal({ surprise, onClose, onSuccess }) {
 
           .wordsearch-challenge {
             margin-bottom: 20px;
+          }
+
+          .wml-challenge {
+            margin-bottom: 20px;
+          }
+
+          .wml-progress {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+          }
+
+          .wml-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            border: 3px solid #ccc;
+            transition: all 0.3s;
+          }
+
+          .wml-dot.active {
+            background: #ff6b9d;
+            border-color: #c44569;
+            transform: scale(1.2);
+          }
+
+          .wml-dot.done {
+            background: #4CAF50;
+            border-color: #2e7d32;
+          }
+
+          .wml-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+          }
+
+          .wml-option-btn {
+            width: 100%;
+            padding: 16px;
+            font-size: 18px;
+            font-weight: 900;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+            cursor: pointer;
+            border: 4px solid #2d2256;
+            background: white;
+            color: #2d2256;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.2);
+            transition: all 0.15s;
+          }
+
+          .wml-option-btn:hover:not(:disabled) {
+            background: #fff0f5;
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 rgba(0,0,0,0.2);
+          }
+
+          .wml-option-btn:disabled {
+            cursor: not-allowed;
+          }
+
+          .wml-option-btn.correct {
+            background: #4CAF50;
+            color: white;
+            border-color: #2e7d32;
+            animation: success-pulse 0.5s ease-out;
+          }
+
+          .wml-option-btn.wrong {
+            background: #ff5252;
+            color: white;
+            border-color: #d32f2f;
+            animation: shake-input 0.5s;
           }
 
           .words-to-find-modal {
