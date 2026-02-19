@@ -720,7 +720,7 @@ function HomeMenu({ setCurrentSection, hasSeenMessage, setHasSeenMessage, comple
     },
     {
       id: 'movies',
-      label: 'PELÍCULAS 🎬',
+      label: 'NUESTRA LISTA 🎬',
       color: '#7c3aed',
       noChallenge: true
     }
@@ -3707,8 +3707,8 @@ function ChallengeModal({ surprise, onClose, onSuccess }) {
   );
 }
 
-const SUPABASE_URL = 'https://sgwussfrmmyhopcuzxxj.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNnd3Vzc2ZybW15aG9wY3V6eHhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NjI4ODAsImV4cCI6MjA4NzAzODg4MH0.4lQaQ1LZ3j2vDa1H4xTh5WGfopLHQwYCfkP2MVR8YVI';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 const sbFetch = (path, options = {}) =>
   fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
@@ -3784,7 +3784,7 @@ function MoviesSection() {
   return (
     <div className="movies-section">
       <div className="movies-card">
-        <div className="movies-title">NUESTRA LISTA DE PELIS </div>
+        <div className="movies-title">🎬 NUESTRA LISTA DE PELIS</div>
         <div className="movies-subtitle">¿Cuántas nos quedan por ver juntos? 💜</div>
 
         {error && (
@@ -3807,7 +3807,7 @@ function MoviesSection() {
         {loading ? (
           <div className="movies-loading">Cargando lista...</div>
         ) : movies.length === 0 ? (
-          <div className="movies-empty">¡Agrega la primera peli! </div>
+          <div className="movies-empty">¡Agrega la primera peli! 🍿</div>
         ) : (
           <ul className="movies-list">
             {movies.map((movie) => (
