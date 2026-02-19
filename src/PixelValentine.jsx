@@ -566,6 +566,7 @@ function GameWorld({ currentSection, setCurrentSection, completedLevels, setComp
         {currentSection === 'barca' && <BarcaSection />}
         {currentSection === 'lovereasons' && <LoveReasonsSection pauseMusic={pauseMusic} resumeMusic={resumeMusic} />}
         {currentSection === 'whosmorelikely' && <WhoIsMoreSection />}
+        {currentSection === 'movies' && <MoviesSection />}
         
 
         <style jsx>{`
@@ -716,11 +717,18 @@ function HomeMenu({ setCurrentSection, hasSeenMessage, setHasSeenMessage, comple
           }
         ]
       }
+    },
+    {
+      id: 'movies',
+      label: 'PELÍCULAS 🎬',
+      color: '#7c3aed',
+      noChallenge: true
     }
   ];
 
   const isSurpriseUnlocked = (index) => {
     if (index === 0) return true;
+    if (menuItems[index].noChallenge) return true;
     return completedLevels.includes(menuItems[index - 1].id);
   };
 
@@ -729,7 +737,7 @@ function HomeMenu({ setCurrentSection, hasSeenMessage, setHasSeenMessage, comple
     
     playClick(); // Reproducir sonido de click
     
-    if (completedLevels.includes(item.id)) {
+    if (item.noChallenge || completedLevels.includes(item.id)) {
       setCurrentSection(item.id);
     } else {
       setActiveSurprise(item);
@@ -2487,467 +2495,6 @@ function BarcaSection() {
 }
 
 
-function MoviesSection() {
-  // Cargar películas desde localStorage al iniciar
-  const [movies, setMovies] = useState(() => {
-    const saved = localStorage.getItem('movies');
-    if (saved) {
-      return JSON.parse(saved);
-    }
-    return [
-      { id: 1, title: 'Inception', rating: 0 },
-      { id: 2, title: 'The Notebook', rating: 0 },
-      { id: 3, title: 'Interstellar', rating: 0 }
-    ];
-  });
-  
-  const [newMovieTitle, setNewMovieTitle] = useState('');
-  const [showAddForm, setShowAddForm] = useState(false);
-
-  // Guardar en localStorage cada vez que cambian las películas
-  useEffect(() => {
-    localStorage.setItem('movies', JSON.stringify(movies));
-  }, [movies]);
-
-  const handleRating = (movieId, rating) => {
-    setMovies(movies.map(movie => 
-      movie.id === movieId ? { ...movie, rating } : movie
-    ));
-  };
-
-  const addMovie = () => {
-    if (newMovieTitle.trim()) {
-      const newMovie = {
-        id: Date.now(),
-        title: newMovieTitle.trim(),
-        rating: 0
-      };
-      setMovies([...movies, newMovie]);
-      setNewMovieTitle('');
-      setShowAddForm(false);
-    }
-  };
-
-  const deleteMovie = (movieId) => {
-    setMovies(movies.filter(movie => movie.id !== movieId));
-  };
-
-  const getAverageRating = () => {
-    const ratedMovies = movies.filter(m => m.rating > 0);
-    if (ratedMovies.length === 0) return 0;
-    const sum = ratedMovies.reduce((acc, m) => acc + m.rating, 0);
-    return (sum / ratedMovies.length).toFixed(1);
-  };
-
-  return (
-    <div className="movies-section">
-      <div className="section-title">
-        🎬 NUESTRAS PELÍCULAS 🎬
-      </div>
-
-      <div className="movies-container">
-        <div className="movies-header">
-          <div className="stats-box">
-            <div className="stat-item">
-              <span className="stat-number">{movies.length}</span>
-              <span className="stat-label">Películas</span>
-            </div>
-            <div className="stat-divider"></div>
-            <div className="stat-item">
-              <span className="stat-number">⭐ {getAverageRating()}</span>
-              <span className="stat-label">Promedio</span>
-            </div>
-          </div>
-
-          <button 
-            className="add-movie-btn"
-            onClick={() => setShowAddForm(!showAddForm)}
-          >
-            {showAddForm ? '✖ Cancelar' : '+ Agregar Película'}
-          </button>
-        </div>
-
-        {showAddForm && (
-          <div className="add-movie-form">
-            <input
-              type="text"
-              className="movie-input"
-              value={newMovieTitle}
-              onChange={(e) => setNewMovieTitle(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && addMovie()}
-              placeholder="Nombre de la película..."
-              autoFocus
-            />
-            <button className="save-movie-btn" onClick={addMovie}>
-              Guardar
-            </button>
-          </div>
-        )}
-
-        <div className="movies-list">
-          {movies.map((movie, index) => (
-            <div key={movie.id} className="movie-card" style={{ animationDelay: `${index * 0.1}s` }}>
-              <div className="movie-header">
-                <h3 className="movie-title">🎬 {movie.title}</h3>
-                <button 
-                  className="delete-movie-btn"
-                  onClick={() => deleteMovie(movie.id)}
-                  title="Eliminar película"
-                >
-                  ✖
-                </button>
-              </div>
-              
-              <div className="rating-container">
-                <div className="rating-label">Tu calificación:</div>
-                <div className="stars">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      className={`star-btn ${movie.rating >= star ? 'filled' : ''}`}
-                      onClick={() => handleRating(movie.id, star)}
-                      title={`${star} estrella${star > 1 ? 's' : ''}`}
-                    >
-                      ⭐
-                    </button>
-                  ))}
-                </div>
-                {movie.rating > 0 && (
-                  <div className="rating-value">{movie.rating}/5</div>
-                )}
-              </div>
-            </div>
-          ))}
-
-          {movies.length === 0 && (
-            <div className="empty-state">
-              <div className="empty-icon">🎬</div>
-              <p>No hay películas aún. ¡Agrega la primera!</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <style jsx>{`
-        .movies-section {
-          max-width: 900px;
-          margin: 80px auto 40px;
-          padding: 20px;
-        }
-
-        .section-title {
-          font-size: 48px;
-          font-weight: 900;
-          color: white;
-          text-align: center;
-          margin-bottom: 50px;
-          text-shadow: 4px 4px 0px rgba(0, 0, 0, 0.3);
-          letter-spacing: 4px;
-        }
-
-        .movies-container {
-          background: white;
-          border: 4px solid #2d2256;
-          box-shadow: 12px 12px 0 rgba(0, 0, 0, 0.3);
-          padding: 40px;
-        }
-
-        .movies-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 30px;
-          gap: 20px;
-          flex-wrap: wrap;
-        }
-
-        .stats-box {
-          display: flex;
-          align-items: center;
-          gap: 20px;
-          background: #f5f5f5;
-          border: 3px solid #2d2256;
-          padding: 15px 25px;
-          border-radius: 8px;
-        }
-
-        .stat-item {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        }
-
-        .stat-number {
-          font-size: 28px;
-          font-weight: 900;
-          color: #f59e0b;
-          font-family: 'Courier New', monospace;
-        }
-
-        .stat-label {
-          font-size: 12px;
-          color: #2d2256;
-          font-weight: 700;
-          font-family: 'Courier New', monospace;
-          text-transform: uppercase;
-        }
-
-        .stat-divider {
-          width: 2px;
-          height: 40px;
-          background: #2d2256;
-        }
-
-        .add-movie-btn {
-          background: #f59e0b;
-          border: 4px solid #d97706;
-          box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.3);
-          color: white;
-          font-size: 16px;
-          font-weight: 900;
-          padding: 12px 24px;
-          cursor: pointer;
-          font-family: 'Courier New', monospace;
-          transition: all 0.2s;
-        }
-
-        .add-movie-btn:hover {
-          transform: translate(2px, 2px);
-          box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
-        }
-
-        .add-movie-btn:active {
-          transform: translate(4px, 4px);
-          box-shadow: 0 0 0 rgba(0, 0, 0, 0.3);
-        }
-
-        .add-movie-form {
-          display: flex;
-          gap: 10px;
-          margin-bottom: 30px;
-          animation: form-appear 0.3s ease-out;
-        }
-
-        @keyframes form-appear {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .movie-input {
-          flex: 1;
-          font-size: 16px;
-          padding: 12px;
-          border: 3px solid #2d2256;
-          font-family: 'Courier New', monospace;
-          font-weight: 600;
-        }
-
-        .movie-input:focus {
-          outline: none;
-          border-color: #f59e0b;
-        }
-
-        .save-movie-btn {
-          background: #10b981;
-          border: 3px solid #059669;
-          box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.2);
-          color: white;
-          font-size: 16px;
-          font-weight: 900;
-          padding: 12px 24px;
-          cursor: pointer;
-          font-family: 'Courier New', monospace;
-          transition: all 0.2s;
-        }
-
-        .save-movie-btn:hover {
-          transform: translate(2px, 2px);
-          box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.2);
-        }
-
-        .movies-list {
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-        }
-
-        .movie-card {
-          background: #f9fafb;
-          border: 3px solid #2d2256;
-          border-radius: 8px;
-          padding: 20px;
-          animation: card-appear 0.4s ease-out backwards;
-        }
-
-        @keyframes card-appear {
-          from {
-            opacity: 0;
-            transform: translateX(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-
-        .movie-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 15px;
-        }
-
-        .movie-title {
-          font-size: 20px;
-          font-weight: 900;
-          color: #2d2256;
-          font-family: 'Courier New', monospace;
-          margin: 0;
-        }
-
-        .delete-movie-btn {
-          background: #ef4444;
-          border: 2px solid #dc2626;
-          color: white;
-          font-size: 14px;
-          font-weight: 900;
-          width: 28px;
-          height: 28px;
-          border-radius: 50%;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: all 0.2s;
-        }
-
-        .delete-movie-btn:hover {
-          transform: scale(1.1);
-          background: #dc2626;
-        }
-
-        .rating-container {
-          display: flex;
-          align-items: center;
-          gap: 15px;
-          flex-wrap: wrap;
-        }
-
-        .rating-label {
-          font-size: 14px;
-          font-weight: 700;
-          color: #2d2256;
-          font-family: 'Courier New', monospace;
-        }
-
-        .stars {
-          display: flex;
-          gap: 5px;
-        }
-
-        .star-btn {
-          background: none;
-          border: none;
-          font-size: 28px;
-          cursor: pointer;
-          transition: all 0.2s;
-          filter: grayscale(100%);
-          opacity: 0.3;
-        }
-
-        .star-btn:hover {
-          transform: scale(1.2);
-          opacity: 0.6;
-        }
-
-        .star-btn.filled {
-          filter: grayscale(0%);
-          opacity: 1;
-          animation: star-fill 0.3s ease-out;
-        }
-
-        @keyframes star-fill {
-          0% {
-            transform: scale(0.5) rotate(-45deg);
-          }
-          50% {
-            transform: scale(1.3) rotate(10deg);
-          }
-          100% {
-            transform: scale(1) rotate(0deg);
-          }
-        }
-
-        .rating-value {
-          font-size: 16px;
-          font-weight: 900;
-          color: #f59e0b;
-          font-family: 'Courier New', monospace;
-          padding: 5px 12px;
-          background: #fef3c7;
-          border: 2px solid #f59e0b;
-          border-radius: 20px;
-        }
-
-        .empty-state {
-          text-align: center;
-          padding: 60px 20px;
-          color: #9ca3af;
-        }
-
-        .empty-icon {
-          font-size: 64px;
-          margin-bottom: 20px;
-          opacity: 0.5;
-        }
-
-        .empty-state p {
-          font-size: 18px;
-          font-family: 'Courier New', monospace;
-          font-weight: 600;
-        }
-
-        @media (max-width: 768px) {
-          .section-title {
-            font-size: 32px;
-          }
-
-          .movies-container {
-            padding: 25px 20px;
-          }
-
-          .movies-header {
-            flex-direction: column;
-            align-items: stretch;
-          }
-
-          .stats-box {
-            justify-content: center;
-          }
-
-          .movie-title {
-            font-size: 18px;
-          }
-
-          .star-btn {
-            font-size: 24px;
-          }
-
-          .add-movie-form {
-            flex-direction: column;
-          }
-        }
-      `}</style>
-    </div>
-  );
-}
-
 function WhoIsMoreSection() {
   return (
     <div className="whoismore-section">
@@ -4156,6 +3703,350 @@ function ChallengeModal({ surprise, onClose, onSuccess }) {
           }
         `}</style>
       </div>
+    </div>
+  );
+}
+
+const SUPABASE_URL = 'https://sgwussfrmmyhopcuzxxj.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNnd3Vzc2ZybW15aG9wY3V6eHhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NjI4ODAsImV4cCI6MjA4NzAzODg4MH0.4lQaQ1LZ3j2vDa1H4xTh5WGfopLHQwYCfkP2MVR8YVI';
+
+const sbFetch = (path, options = {}) =>
+  fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation',
+      ...(options.headers || {})
+    }
+  });
+
+function MoviesSection() {
+  const [movies, setMovies] = useState([]);
+  const [newMovie, setNewMovie] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [hover, setHover] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await sbFetch('movies?select=*&order=id.asc');
+        const data = await res.json();
+        setMovies(data);
+      } catch (e) {
+        setError('No se pudo conectar a la base de datos');
+      }
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  const addMovie = async () => {
+    const title = newMovie.trim();
+    if (!title) return;
+    try {
+      const res = await sbFetch('movies', {
+        method: 'POST',
+        body: JSON.stringify({ title, rating: 0 })
+      });
+      const data = await res.json();
+      setMovies(prev => [...prev, data[0]]);
+      setNewMovie('');
+    } catch (e) {
+      setError('Error al agregar la película');
+    }
+  };
+
+  const setRating = async (id, rating) => {
+    const newRating = movies.find(m => m.id === id)?.rating === rating ? 0 : rating;
+    setMovies(prev => prev.map(m => m.id === id ? { ...m, rating: newRating } : m));
+    try {
+      await sbFetch(`movies?id=eq.${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ rating: newRating })
+      });
+    } catch (e) {
+      setError('Error al guardar el rating');
+    }
+  };
+
+  const removeMovie = async (id) => {
+    setMovies(prev => prev.filter(m => m.id !== id));
+    try {
+      await sbFetch(`movies?id=eq.${id}`, { method: 'DELETE' });
+    } catch (e) {
+      setError('Error al eliminar la película');
+    }
+  };
+
+  return (
+    <div className="movies-section">
+      <div className="movies-card">
+        <div className="movies-title">NUESTRA LISTA DE PELIS </div>
+        <div className="movies-subtitle">¿Cuántas nos quedan por ver juntos? 💜</div>
+
+        {error && (
+          <div className="movies-error" onClick={() => setError(null)}>{error} ✕</div>
+        )}
+
+        <div className="movies-add-row">
+          <input
+            className="movies-input"
+            type="text"
+            placeholder="Agregar película..."
+            value={newMovie}
+            onChange={(e) => setNewMovie(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && addMovie()}
+            maxLength={60}
+          />
+          <button className="movies-add-btn" onClick={addMovie}>+ AGREGAR</button>
+        </div>
+
+        {loading ? (
+          <div className="movies-loading">Cargando lista...</div>
+        ) : movies.length === 0 ? (
+          <div className="movies-empty">¡Agrega la primera peli! </div>
+        ) : (
+          <ul className="movies-list">
+            {movies.map((movie) => (
+              <li
+                key={movie.id}
+                className="movie-item"
+                onMouseEnter={() => setHover(movie.id)}
+                onMouseLeave={() => setHover(null)}
+              >
+                <span className="movie-title-text">{movie.title}</span>
+                <div className="movie-stars">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <span
+                      key={star}
+                      className={`star-btn ${star <= movie.rating ? 'active' : ''}`}
+                      onClick={() => setRating(movie.id, star === movie.rating ? 0 : star)}
+                    >★</span>
+                  ))}
+                </div>
+                {hover === movie.id && (
+                  <button className="movie-remove-btn" onClick={() => removeMovie(movie.id)}>✕</button>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <style jsx>{`
+        .movies-section {
+          width: 100%;
+          max-width: 700px;
+          margin: 0 auto;
+          padding-top: 80px;
+        }
+
+        .movies-card {
+          background: rgba(255, 255, 255, 0.97);
+          border: 4px solid #2d2256;
+          box-shadow: 10px 10px 0 0 rgba(0,0,0,0.25);
+          padding: 36px 32px;
+          font-family: 'Courier New', monospace;
+        }
+
+        .movies-title {
+          font-size: 26px;
+          font-weight: 900;
+          color: #2d2256;
+          letter-spacing: 2px;
+          margin-bottom: 6px;
+        }
+
+        .movies-subtitle {
+          font-size: 14px;
+          color: #7c3aed;
+          font-weight: 700;
+          letter-spacing: 1px;
+          margin-bottom: 28px;
+        }
+
+        .movies-add-row {
+          display: flex;
+          gap: 10px;
+          margin-bottom: 24px;
+        }
+
+        .movies-input {
+          flex: 1;
+          font-family: 'Courier New', monospace;
+          font-size: 15px;
+          font-weight: 700;
+          padding: 12px 16px;
+          border: 3px solid #2d2256;
+          color: #2d2256;
+          outline: none;
+          box-shadow: 4px 4px 0 0 rgba(0,0,0,0.15);
+        }
+
+        .movies-input:focus {
+          border-color: #7c3aed;
+          box-shadow: 4px 4px 0 0 rgba(124,58,237,0.2);
+        }
+
+        .movies-add-btn {
+          background: #7c3aed;
+          border: 3px solid #4c1d95;
+          box-shadow: 4px 4px 0 0 rgba(0,0,0,0.2);
+          color: white;
+          font-family: 'Courier New', monospace;
+          font-size: 13px;
+          font-weight: 900;
+          padding: 12px 18px;
+          cursor: pointer;
+          letter-spacing: 1px;
+          white-space: nowrap;
+          transition: all 0.1s;
+        }
+
+        .movies-add-btn:hover {
+          transform: translate(2px, 2px);
+          box-shadow: 2px 2px 0 0 rgba(0,0,0,0.2);
+        }
+
+        .movies-add-btn:active {
+          transform: translate(4px, 4px);
+          box-shadow: none;
+        }
+
+        .movies-empty {
+          text-align: center;
+          color: #9ca3af;
+          font-size: 16px;
+          font-weight: 700;
+          padding: 30px 0;
+          letter-spacing: 1px;
+        }
+
+        .movies-loading {
+          text-align: center;
+          color: #9ca3af;
+          font-size: 14px;
+          padding: 20px 0;
+        }
+
+        .movies-error {
+          background: #ff5252;
+          border: 3px solid #d32f2f;
+          color: white;
+          font-size: 13px;
+          font-weight: 700;
+          padding: 10px 14px;
+          margin-bottom: 16px;
+          cursor: pointer;
+          letter-spacing: 0.5px;
+        }
+
+        .movies-list {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .movie-item {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 16px;
+          border: 3px solid #e5e7eb;
+          background: #faf5ff;
+          transition: border-color 0.2s;
+          position: relative;
+        }
+
+        .movie-item:hover {
+          border-color: #7c3aed;
+        }
+
+        .movie-title-text {
+          flex: 1;
+          font-size: 15px;
+          font-weight: 700;
+          color: #2d2256;
+          letter-spacing: 0.5px;
+          word-break: break-word;
+        }
+
+        .movie-stars {
+          display: flex;
+          gap: 4px;
+        }
+
+        .star-btn {
+          font-size: 22px;
+          cursor: pointer;
+          color: #d1d5db;
+          transition: color 0.15s, transform 0.1s;
+          line-height: 1;
+          user-select: none;
+        }
+
+        .star-btn:hover {
+          color: #f59e0b;
+          transform: scale(1.2);
+        }
+
+        .star-btn.active {
+          color: #f59e0b;
+        }
+
+        .movie-remove-btn {
+          background: #ff5252;
+          border: 2px solid #d32f2f;
+          color: white;
+          font-size: 13px;
+          font-weight: 900;
+          width: 26px;
+          height: 26px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          font-family: 'Courier New', monospace;
+          transition: all 0.1s;
+        }
+
+        .movie-remove-btn:hover {
+          background: #d32f2f;
+        }
+
+        @media (max-width: 768px) {
+          .movies-section {
+            padding-top: 70px;
+          }
+
+          .movies-card {
+            padding: 24px 16px;
+          }
+
+          .movies-title {
+            font-size: 20px;
+          }
+
+          .movies-add-row {
+            flex-direction: column;
+          }
+
+          .movies-add-btn {
+            width: 100%;
+          }
+
+          .star-btn {
+            font-size: 20px;
+          }
+        }
+      `}</style>
     </div>
   );
 }
