@@ -720,7 +720,7 @@ function HomeMenu({ setCurrentSection, hasSeenMessage, setHasSeenMessage, comple
     },
     {
       id: 'movies',
-      label: 'NUESTRA LISTA 🎬',
+      label: 'PELÍCULAS 🎬',
       color: '#7c3aed',
       noChallenge: true
     }
@@ -3784,7 +3784,7 @@ function MoviesSection() {
   return (
     <div className="movies-section">
       <div className="movies-card">
-        <div className="movies-title">🎬 NUESTRA LISTA DE PELIS</div>
+        <div className="movies-title">NUESTRA LISTA DE PELIS</div>
         <div className="movies-subtitle">¿Cuántas nos quedan por ver juntos? 💜</div>
 
         {error && (
@@ -3807,7 +3807,7 @@ function MoviesSection() {
         {loading ? (
           <div className="movies-loading">Cargando lista...</div>
         ) : movies.length === 0 ? (
-          <div className="movies-empty">¡Agrega la primera peli! 🍿</div>
+          <div className="movies-empty">¡Agrega la primera peli!</div>
         ) : (
           <ul className="movies-list">
             {movies.map((movie) => (
